@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Signin = (props) => {
-    const [email, setEmail] = useState("")
+    const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
-    const [emailError, setEmailError] = useState("")
+    const [usernameError, setUsernameError] = useState("")
     const [passwordError, setPasswordError] = useState("")
     
     const navigate = useNavigate();
@@ -13,7 +13,7 @@ const Signin = (props) => {
 
     }
     const onSignupClick = () => {
-        
+        navigate("/signup")
     }
 
     return <div className={"mainContainer"}>
@@ -23,11 +23,11 @@ const Signin = (props) => {
         <br />
         <div className={"inputContainer"}>
             <input
-                value={email}
+                value={username}
                 placeholder="User name"
-                onChange={ev => setEmail(ev.target.value)}
+                onChange={ev => setUsername(ev.target.value)}
                 className={"inputBox"} />
-            <label className="errorLabel">{emailError}</label>
+            <label className="errorLabel">{usernameError}</label>
         </div>
         <br />
         <div className={"inputContainer"}>

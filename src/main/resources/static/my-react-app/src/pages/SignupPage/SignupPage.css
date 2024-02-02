@@ -1,0 +1,7 @@
+.input_contain{
+    display: flex;
+    justify-content: center;
+}
+.m-2{
+    margin: 20px;
+}
