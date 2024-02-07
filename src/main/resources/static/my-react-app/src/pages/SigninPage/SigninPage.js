@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { json, useNavigate } from "react-router-dom";
 
 const Signin = (props) => {
     const [username, setUsername] = useState("")
@@ -15,7 +15,31 @@ const Signin = (props) => {
     const onSignupClick = () => {
         navigate("/signup")
     }
-
+    const onSubmit = async (event) => {
+        event.preventDefault();
+        var userData = {
+            userName: username,
+            password: password
+        }
+        console.log(userData)
+        try{
+            fetch('http://localhost:8080/api/v1/users/login',{
+                method: 'POST',
+                mode: 'no-cors',
+                // headers:{
+                //     "Content-type": "multipart/form-data",
+                // },
+                body: JSON.stringify(userData)
+            }).then(res => {
+                console.log('submit successfully', res)
+                localStorage.setItem('userNameKey', username)
+                navigate("/")
+            });
+        }catch{
+            console.log("err")
+        }
+        
+    }
     return <div className={"mainContainer"}>
         <div className={"titleContainer"}>
             <div>Login</div>
@@ -43,7 +67,7 @@ const Signin = (props) => {
             <input
                 className={"inputButton"}
                 type="button"
-                onClick={onSigninClick}
+                onClick={onSubmit}
                 value={"Sign in"} />
             <input
                 className={"inputButton"}
