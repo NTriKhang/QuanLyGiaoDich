@@ -1,0 +1,20 @@
+.container-input-form {
+    width: 100%;
+    border-width: 1px;
+    border-color: #888;
+    border-style: solid;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+}
+
+.form-container {
+    width: 600px;
+    padding: 80px 40px;
+    box-shadow: 0 4px 8px 4px rgba(0, 0, 0, 0.2);
+}
+
+.icon-input {
+    padding-left: 10px;
+    padding-right: 10px;
+}
