@@ -69,3 +69,74 @@ BEGIN
 END;
 
 --------------------------------------------------------------------------------------------
+
+----- Hieu ----
+CREATE OR REPLACE FUNCTION get_sga_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT * FROM V$SGA;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION get_pga_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT * FROM v$pgastat;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION get_process_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT pid, spid, program FROM v$process;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION get_datafile_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT file_name, file_id, tablespace_name, bytes, status FROM dba_data_files;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION get_instance_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    select instance_number, instance_name, version, startup_time, status, database_status from v$instance;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION get_controlfile_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT status, name FROM v$controlfile;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION get_spfile_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT value, name FROM V$PARAMETER WHERE name = 'spfile';
+    RETURN v_cursor;
+END;

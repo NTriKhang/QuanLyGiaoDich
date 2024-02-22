@@ -1,6 +1,8 @@
 import React from "react"
 import { useNavigate } from "react-router-dom";
 
+import Navbar from "../../components/navbar/Navbar.js";
+
 const Home = (props) => {
     const { loggedIn, email } = props
     const navigate = useNavigate();
@@ -34,28 +36,36 @@ const Home = (props) => {
         }
 
     }
-    return <div className="mainContainer">
-        <div className={"titleContainer"}>
-            <div>Welcome!</div>
-        </div>
-        <div>
-            This is the home page.
-        </div>
-        <div className={"buttonContainer"}>
+    return (
+       <div>
+            <Navbar />
             <input
-                className={"inputButton"}
-                type="button"
-                onClick={onSignInClick}
-                value={"Sign in"} />
-            <input
-                className={"inputButton"}
-                type="button"
-                onClick={onSignOutClick}
-                value={"Sign out"} />
-        </div>
-
-
-    </div>
+                    className={"inputButton"}
+                    type="button"
+                    onClick={onSignOutClick}
+                    value={"Sign out"} />
+            {/* <div className="mainContainer">
+            <div className={"titleContainer"}>
+                <div>Welcome!</div>
+            </div>
+            <div>
+                This is the home page.
+            </div>
+            <div className={"buttonContainer"}>
+                <input
+                    className={"inputButton"}
+                    type="button"
+                    onClick={onSignInClick}
+                    value={"Sign in"} />
+                <input
+                    className={"inputButton"}
+                    type="button"
+                    onClick={onSignOutClick}
+                    value={"Sign out"} />
+            </div>
+        </div> */}
+       </div>
+    )
 }
 
 export default Home

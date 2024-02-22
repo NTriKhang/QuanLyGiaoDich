@@ -1,13 +1,9 @@
 .input_contain{
     display: flex;
-    justify-content: center;
-}
-.m-2{
-    margin: 20px;
+    justify-content: space-between;
 }
 
-.btn{
-
+.btn-custom {
         border: none;
         background: cornflowerblue;
         color: white;
@@ -17,8 +13,34 @@
         border-radius: 8px;
         cursor: pointer;
 }
+
+.btn-custom:hover {
+    opacity: 0.7;
+}
+
 .background-profile{
     background-image: url('./user.jpg');  /* Use the imported image */
-  background-size: cover;  /* Adjust as needed */
-  background-repeat: no-repeat;
+    background-size: cover;  /* Adjust as needed */
+    background-repeat: no-repeat;
+}
+
+.container-input-form {
+    width: 100%;
+    border-width: 1px;
+    border-color: #888;
+    border-style: solid;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+}
+
+.form-container {
+    min-width: 600px;
+    padding: 80px 40px;
+    box-shadow: 0 4px 8px 4px rgba(0, 0, 0, 0.2);
+}
+
+.icon-input {
+    padding-left: 10px;
+    padding-right: 10px;
 }
