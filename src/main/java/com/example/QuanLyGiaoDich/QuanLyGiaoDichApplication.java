@@ -19,7 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class QuanLyGiaoDichApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(QuanLyGiaoDichApplication.class, args);
+		SpringApplication.run(QuanLyGiaoDichApplication	.class, args);
 	}
 
 }

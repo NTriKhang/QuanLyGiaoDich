@@ -1,17 +1,26 @@
 package com.example.QuanLyGiaoDich.controller;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.QuanLyGiaoDich.Configure.MapUserConnection;
+import com.example.QuanLyGiaoDich.Services.DatabaseService;
+import com.example.QuanLyGiaoDich.dto.UserLoginDto;
 import com.example.QuanLyGiaoDich.dto.UserSignUpDto;
 import com.example.QuanLyGiaoDich.models.Users;
 import com.example.QuanLyGiaoDich.repositories.UsersRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.awt.PageAttributes.MediaType;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,10 +30,13 @@ import java.util.UUID;
 public class UsersController {
 
     private final UsersRepository userRepository;
+    private final DatabaseService databaseService;
 
     @Autowired
-    public UsersController(UsersRepository userRepository) {
+    public UsersController(UsersRepository userRepository,
+    						DatabaseService databaseService) {
         this.userRepository = userRepository;
+        this.databaseService = databaseService;
     }
 
     // Endpoint to get all users
@@ -67,11 +79,40 @@ public class UsersController {
     		if(resultCode == 200)
     			return new ResponseEntity<>(userSignUpDto, HttpStatus.CREATED); 
     		return new ResponseEntity<>(userSignUpDto, HttpStatus.BAD_REQUEST); 
-		} catch (Exception e) {
+		} catch (Exception error) {
 			// TODO: handle exception
+			System.out.println(error.getMessage());
 			return new ResponseEntity<>(new UserSignUpDto(), HttpStatus.BAD_REQUEST);
 		}
     }
+    @PostMapping(path = "/login")
+    public ResponseEntity<Object> loginUser(@RequestBody String userData) throws JsonMappingException, JsonProcessingException, SQLException, ClassNotFoundException{
+
+        	ObjectMapper mapper = new ObjectMapper();
+    		UserLoginDto userLoginUpDto = mapper.readValue(userData,UserLoginDto.class);
+    		System.out.println(userLoginUpDto.userName + " " + userLoginUpDto.password);
+    		if(MapUserConnection.mapUserConnection.containsKey(userLoginUpDto.userName)) {
+    			return new ResponseEntity<>("have logged in on another devices", HttpStatus.ALREADY_REPORTED);
+    		}
+    		Connection conn = databaseService.connect(userLoginUpDto.userName, userLoginUpDto.password, " "); 
+    		MapUserConnection.mapUserConnection.put(userLoginUpDto.userName, conn);
+    		return new ResponseEntity<>("login success", HttpStatus.OK);
+    }
+    @GetMapping(path = "/logout/{userName}")
+    public ResponseEntity<Object> logoutUser(@PathVariable String userName) throws JsonMappingException, JsonProcessingException, SQLException, ClassNotFoundException{
+		//Connection res = databaseService.getConnection(userLoginUpDto.userName, userLoginUpDto.password); 
+		Connection conn = null;
+		System.out.println(userName);
+		if(MapUserConnection.mapUserConnection.containsKey(userName)) {
+			conn = MapUserConnection.mapUserConnection.get(userName);
+		}
+		else {
+			return new ResponseEntity<>("no connection", HttpStatus.OK);
+		}
+		databaseService.closeConnection(conn);
+		MapUserConnection.mapUserConnection.remove(userName);
+		return new ResponseEntity<>("logout successfully", HttpStatus.OK);
+}
     // Endpoint to update an existing user
     @PutMapping("/{userID}")
     public ResponseEntity<Users> updateUser(@PathVariable String userID, @RequestBody Users user) {
