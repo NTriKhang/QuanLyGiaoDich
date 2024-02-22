@@ -67,5 +67,66 @@ BEGIN
     create_new_application_user('001', 'A', 'S', 'ADD', '123', 'MAIL', 'S', 'AS', NULL, v_results);
     DBMS_OUTPUT.PUT_LINE('Result: ' || v_results);
 END;
+-----Kiet---------
+SET SERVEROUTPUT ON
+-----xemtablespace-------
+create or replace NONEDITIONABLE PROCEDURE GET_TABLESPACE_INFO(p_cur OUT SYS_REFCURSOR) IS
+BEGIN
+    OPEN p_cur FOR
+    SELECT file_name,
+           bytes/1024/1024 AS size_mb,
+           tablespace_name
+    FROM dba_data_files;
+END;
 
---------------------------------------------------------------------------------------------
+-----------taotablespace----------
+create or replace NONEDITIONABLE PROCEDURE create_tablespace_user_choice(
+    p_tablespace_name IN VARCHAR2,
+    p_datafile_path IN VARCHAR2,
+    p_datafile_size IN NUMBER
+) IS
+    v_sql VARCHAR2(4000);
+BEGIN
+    v_sql := 'CREATE TABLESPACE ' || p_tablespace_name ||
+             ' DATAFILE ''' || p_datafile_path || ''' SIZE ' || p_datafile_size || 'M' ||
+             ' AUTOEXTEND ON NEXT 10M MAXSIZE UNLIMITED';
+    EXECUTE IMMEDIATE v_sql;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END create_tablespace_user_choice;
+
+-------timkiem--------------
+create or replace NONEDITIONABLE PROCEDURE get_user_tablespaces(
+    p_username IN VARCHAR2,
+    p_recordset OUT SYS_REFCURSOR
+) IS
+BEGIN
+    OPEN p_recordset FOR
+        SELECT df.file_name, 
+               df.bytes/1024/1024 AS size, 
+               ts.tablespace_name
+        FROM dba_data_files df
+        JOIN dba_tablespaces ts ON df.tablespace_name = ts.tablespace_name
+        WHERE ts.tablespace_name IN (
+            SELECT default_tablespace 
+            FROM dba_users 
+            WHERE username = UPPER(p_username)
+        );
+END get_user_tablespaces;
+
+---------themdatafile------------
+create or replace NONEDITIONABLE PROCEDURE add_datafile_to_tablespace (
+    p_tablespace_name IN VARCHAR2,
+    p_datafile_path IN VARCHAR2,
+    p_datafile_size IN NUMBER
+) IS
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TABLESPACE ' || p_tablespace_name || 
+                     ' ADD DATAFILE ''' || p_datafile_path || ''' SIZE ' || 
+                     p_datafile_size || 'M AUTOEXTEND ON NEXT 10M MAXSIZE UNLIMITED';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END add_datafile_to_tablespace;
+
