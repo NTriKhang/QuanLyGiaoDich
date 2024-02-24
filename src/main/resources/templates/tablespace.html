@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quản lý Tablespace</title>
+<style>
+body {
+	font-family: Arial, sans-serif;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 20px;
+}
+
+th, td {
+	padding: 8px;
+	text-align: left;
+	border-bottom: 1px solid #ddd;
+}
+
+th {
+	background-color: #f2f2f2;
+}
+
+tr:hover {
+	background-color: #f5f5f5;
+}
+
+body {
+	font-family: Arial, sans-serif;
+}
+
+.form-group {
+	margin-bottom: 1em;
+}
+
+label {
+	display: block;
+	margin-bottom: .5em;
+}
+
+input[type="text"], input[type="number"] {
+	width: 100%;
+	padding: .5em;
+	margin-bottom: .5em;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+
+button {
+	padding: .5em 1em;
+	color: white;
+	background-color: #007bff;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #0056b3;
+}
+
+#notification {
+	margin-top: 1em;
+}
+
+#add-datafile {
+	background-color: #28a745;
+}
+
+#add-datafile:hover {
+	background-color: #218838;
+}
+
+#create-tablespace-section {
+	width: 100%;
+	max-width: 500px; /* Adjust the width as needed */
+	margin: auto;
+	padding: 1em;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	background: white;
+	border-radius: 8px;
+}
+
+.flex-container {
+	display: flex;
+	justify-content: space-around;
+	align-items: flex-start;
+	flex-wrap: wrap;
+}
+
+.section {
+	background: white;
+	padding: 20px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	border-radius: 8px;
+	margin-bottom: 20px;
+}
+
+.form-section {
+	flex-basis: 45%;
+}
+</style>
+</head>
+<body>
+	<div id="container" style="margin: 50px 10%;">
+		<input type="text" id="username" placeholder="Nhập user muốn xem">
+		<button onclick="searchTablespaces()">Tìm kiếm</button>
+		<h1>Tablespace Information</h1>
+		<table>
+			<thead>
+				<tr>
+					<th>File Name</th>
+					<th>Size (MB)</th>
+					<th>Tablespace Name</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="tablespace : ${tablespaces}">
+					<td th:text="${tablespace.fileName}"></td>
+					<td th:text="${tablespace.size}"></td>
+					<td th:text="${tablespace.tablespaceName}"></td>
+				</tr>
+			</tbody>
+		</table>
+		<div
+			style="display: flex; justify-content: space-around; margin-top: 20px;">
+			<div id="create-tablespace-section" style="margin-top: 20px;">
+				<h2>Tạo Tablespace mới</h2>
+				<form id="create-tablespace-form">
+					<div class="form-group">
+						<label for="tablespaceNameInput">Tên Tablespace</label> <input
+							type="text" id="tablespaceNameInput" placeholder="Tên Tablespace">
+					</div>
+					<div class="form-group">
+						<label for="datafilePathInput">Đường dẫn Datafile</label> <input
+							type="text" id="datafilePathInput"
+							placeholder="Đường dẫn Datafile">
+					</div>
+					<div class="form-group">
+						<label for="sizeInput">Kích thước (MB)</label> <input
+							type="number" id="sizeInput" placeholder="Kích thước (MB)">
+					</div>
+					<button type="button" onclick="createTablespace()">Tạo
+						Tablespace</button>
+				</form>
+			</div>
+			<div id="add-datafile-section" style="margin-top: 20px;">
+				<h2>Bổ sung Datafile vào Tablespace</h2>
+				<form id="add-datafile-form">
+					<div class="form-group">
+						<label for="existingTablespaceNameInput">Tên Tablespace
+							hiện có</label> <input type="text" id="existingTablespaceNameInput"
+							placeholder="Tên Tablespace hiện có">
+					</div>
+					<div class="form-group">
+						<label for="newDatafilePathInput">Đường dẫn Datafile mới</label> <input
+							type="text" id="newDatafilePathInput"
+							placeholder="Đường dẫn Datafile mới">
+					</div>
+					<div class="form-group">
+						<label for="newSizeInput">Kích thước mới (MB)</label> <input
+							type="number" id="newSizeInput" placeholder="Kích thước mới (MB)">
+					</div>
+					<button type="button" onclick="addDatafileToTablespace()">Bổ
+						sung datafile</button>
+				</form>
+			</div>
+		</div>
+	</div>
+	<script>
+    function searchTablespaces() {
+        var username = document.getElementById('username').value;
+        fetch(`/api/tablespaces/${username}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server error status: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(tablespaces => {
+        	addDatafileToTableList(tablespace);
+        });
+    }
+    function addDatafileToTableList(datafile) {
+        if (datafile && datafile.fileName && typeof datafile.size !== 'undefined' && datafile.tablespaceName) {
+            var tableBody = document.querySelector('table tbody');
+            if (!tableBody) {
+                console.error('Không tìm thấy phần tử tbody trong bảng.');
+                return;
+            }
+            var row = tableBody.insertRow();
+            var cellFileName = row.insertCell(0);
+            var cellSize = row.insertCell(1);
+            var cellTablespaceName = row.insertCell(2);
+            
+            cellFileName.textContent = datafile.fileName;
+            cellSize.textContent = datafile.size;
+            cellTablespaceName.textContent = datafile.tablespaceName;
+        } else {
+            console.error('Dữ liệu datafile không hợp lệ:', datafile);
+        }
+    }
+
+
+    function createTablespace() {
+        var tablespaceName = document.getElementById('tablespaceNameInput').value;
+        var datafilePath = document.getElementById('datafilePathInput').value;
+        var size = document.getElementById('sizeInput').value;
+        
+        datafilePath = datafilePath.replace(/\\/g, '\\\\');
+        var data = {
+                tablespaceName: tablespaceName,
+                fileName: datafilePath,
+                size: parseInt(size, 10)
+            };
+        console.log(JSON.stringify(data));
+        fetch('/api/create-tablespace', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server error status: ' + response.status);
+            }
+            else{
+            	window.alert('Tablespace đã được tạo thành công!');
+                addDatafileToTableList(data); 
+                return response.json();
+            }
+        });
+    }
+
+    function addDatafileToTablespace() {
+        var existingTablespaceName = document.getElementById('existingTablespaceNameInput').value;
+        var newDatafilePath = document.getElementById('newDatafilePathInput').value;
+        var newSize = document.getElementById('newSizeInput').value;
+
+        newDatafilePath = newDatafilePath.replace(/\\/g, '\\\\');
+        var data = {
+            tablespaceName: existingTablespaceName,
+            fileName: newDatafilePath,
+            size: parseInt(newSize, 10)
+        };
+
+        console.log(JSON.stringify(data));
+
+        fetch('/api/add-datafile-to-tablespace', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Server error status: ' + response.status);
+            }
+            else{
+            	window.alert('Datafile đã được bổ sung thành công!!');
+                addDatafileToTableList(data);
+                return response.json();
+            }
+        });
+    }
+	</script>
+</body>
+</html>
