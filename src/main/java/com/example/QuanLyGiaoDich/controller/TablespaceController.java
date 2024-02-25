@@ -46,17 +46,17 @@ public class TablespaceController {
 		}
 	}
 
-	@GetMapping("/{username}")
-	public ResponseEntity<List<TablespaceInfo>> getUserTablespaces(@PathVariable String username) {
-		try {
-			List<TablespaceInfo> tablespaces = tablespaceService.getUserTablespaces(username);
-			return ResponseEntity.ok(tablespaces);
-		} catch (Exception e) {
-			System.err.println("Lỗi xảy ra: " + e.getMessage());
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-		}
-	}
+	@GetMapping("/api/tablespaces-info/{username}")
+    public ResponseEntity<List<TablespaceInfo>> getUserTablespaces(@PathVariable String username) {
+        try {
+            List<TablespaceInfo> tablespaces = tablespaceService.getUserTablespacesInfo(username);
+            return ResponseEntity.ok(tablespaces);
+        } catch (Exception e) {
+        	 System.err.println("Lỗi xảy ra: " + e.getMessage());
+     	    e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
 	@PostMapping("/add-datafile-to-tablespace")
 	public ResponseEntity<?> addDatafileToTablespace(@RequestBody TablespaceInfo tablespaceInfo) {
