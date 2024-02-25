@@ -6,8 +6,37 @@ import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 
 const NavbarComponent = () => {
-    const navigate = useNavigate();
+    const onSignOutClick = () => {
+        // You'll update this function later
+        if(localStorage.getItem('userNameKey') != null){
+            try{
+                console.log('trye')
+                fetch('http://localhost:8080/api/v1/users/logout_v2/' + localStorage.getItem('userNameKey'),{
+                    method: 'GET',
+                    // mode: 'no-cors',
+                }).then(res => {
+                    console.log('submit successfully', res)
+                    localStorage.removeItem("userNameKey")
+                    alert('logout success')
+                    document.getElementById('signOutBtn').style.display = 'none';
+                    document.getElementById('signInBtn').style.display = 'block';
+                });
+            }catch{
+                console.log("err")
+            }
+        }
 
+    }
+    const navigate = useNavigate();
+    React.useEffect(() =>  {
+        if(localStorage.getItem('userNameKey') == null)
+        {
+            document.getElementById('signOutBtn').style.display = 'none';
+        }
+        else{
+            document.getElementById('signInBtn').style.display = 'none';
+        }
+    }, [])
     return (
         <Navbar expand="lg" className="bg-body-tertiary">
             <Container>
@@ -26,7 +55,8 @@ const NavbarComponent = () => {
                             </NavDropdown>
                         </Nav>
                         <Nav>
-                            <Nav.Link href="/signin">Signin</Nav.Link>
+                            <Nav.Link id="signInBtn" href="/signin">Signin</Nav.Link>
+                            <Nav.Link id="signOutBtn"><span onClick={onSignOutClick}>Signout</span></Nav.Link>
                             <Nav.Link href="/signup">Signup</Nav.Link>
                         </Nav>
                 </Navbar.Collapse>

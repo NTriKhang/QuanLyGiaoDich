@@ -26,4 +26,9 @@ public interface UsersRepository extends JpaRepository<Users, String> {
             @Param("p_password") String password,
             @Param("p_image_profile") byte[] imageProfile
     );
+	@Procedure(procedureName = "check_user_signin")
+    int checkUserSignin(@Param("username_in") String username);
+	
+	@Procedure(procedureName = "logout")
+	int logout(@Param("username_in") String username);
 }

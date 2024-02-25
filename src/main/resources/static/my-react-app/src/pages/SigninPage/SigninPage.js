@@ -29,7 +29,7 @@ const Signin = (props) => {
         }
         console.log(userData)
         try{
-            fetch('http://localhost:8080/api/v1/users/login',{
+            fetch('http://localhost:8080/api/v1/users/login_v2',{
                 method: 'POST',
                 // mode: 'no-cors',
                 // headers:{
@@ -37,9 +37,19 @@ const Signin = (props) => {
                 // },
                 body: JSON.stringify(userData)
             }).then(res => {
-                console.log('submit successfully', res)
-                localStorage.setItem('userNameKey', username)
-                navigate("/")
+                console.log(res)
+                if(res.status == 409)
+                {
+                    alert('Have already logged in')
+                }
+                else if(res.status == 200){
+                    localStorage.setItem('userNameKey', username)
+                    navigate("/")
+                }
+                else{
+                    alert(res.body)
+                }
+
             });
         }catch{
             console.log("err")
