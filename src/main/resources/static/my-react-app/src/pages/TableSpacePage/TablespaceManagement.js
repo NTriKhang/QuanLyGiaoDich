@@ -28,7 +28,7 @@ const TablespaceManagement = () => {
             });
     }
     const searchTablespaces = () => {
-        fetch(`/api/tablespaces/${username}`)
+        fetch(`http://localhost:8080/api/tablespaces-info/${encodeURIComponent(username)}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Server error status: ' + response.status);
@@ -36,13 +36,16 @@ const TablespaceManagement = () => {
                 return response.json();
             })
             .then(data => {
-                setTablespaces(data);
+                updateTablespacesList(data);
             })
             .catch(error => {
                 console.error('Error fetching tablespace data:', error);
             });
     };
-
+	const updateTablespacesList = (datafile) => {
+		setTablespaces(datafile);
+	};
+	
     const addDatafileToTableList = (datafile) => {
         setTablespaces(prevTablespaces => [...prevTablespaces, datafile]);
     };

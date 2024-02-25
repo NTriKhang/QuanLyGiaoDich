@@ -53,24 +53,28 @@ public class TablespaceService {
         );  
     }
   
-    @SuppressWarnings("unchecked")
-    public List<TablespaceInfo> getUserTablespaces(String username) {
-        List<TablespaceInfo> tablespaces = new ArrayList<>();
-        try {
-            SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
-                    .withProcedureName("GET_USER_TABLESPACES")
-                    .returningResultSet("p_recordset", BeanPropertyRowMapper.newInstance(TablespaceInfo.class));
-
-            SqlParameterSource inParams = new MapSqlParameterSource()
-                    .addValue("p_username", username);
-
-            Map<String, Object> result = jdbcCall.execute(inParams);
-            tablespaces = (List<TablespaceInfo>) result.get("p_recordset");
-        } catch (Exception e) {
-            System.err.println("Lỗi xảy ra: " + e.getMessage());
-            e.printStackTrace();
-        }
-        return tablespaces;
+    public List<TablespaceInfo> getUserTablespacesInfo(String username) {
+        return jdbcTemplate.execute(
+            conn -> {
+                CallableStatement stmt = conn.prepareCall("{ ? = call SYS.GET_USER_TABLESPACES_INFO(?) }");
+                stmt.registerOutParameter(1, OracleTypes.CURSOR); 
+                stmt.setString(2, username.toUpperCase()); 
+                return stmt;
+            },
+            (CallableStatementCallback<List<TablespaceInfo>>) stmt -> {
+                stmt.execute();
+                ResultSet rs = (ResultSet) stmt.getObject(1); 
+                List<TablespaceInfo> tablespaces = new ArrayList<>();
+                while (rs.next()) {
+                    TablespaceInfo info = new TablespaceInfo();
+                    info.setFileName(rs.getString("file_name"));
+                    info.setSize(rs.getInt("size_in_mb"));
+                    info.setTablespaceName(rs.getString("tablespace_name"));
+                    tablespaces.add(info);
+                }
+                return tablespaces;
+            }
+        );  
     }
     public void createTablespace(String tablespaceName, String datafilePath, int size) {      
     	try {
