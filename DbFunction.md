@@ -235,3 +235,16 @@ BEGIN
         p_result := 409;
     END IF;
 END;
+
+------------------------------------Kiệt
+create or replace NONEDITIONABLE FUNCTION get_user_tablespaces_info(p_username IN VARCHAR2)
+RETURN SYS_REFCURSOR IS
+  v_cursor SYS_REFCURSOR;
+BEGIN
+  OPEN v_cursor FOR
+    SELECT df.file_name, df.bytes/1024/1024 AS size_in_mb, ts.tablespace_name
+    FROM dba_data_files df
+    JOIN dba_tablespaces ts ON df.tablespace_name = ts.tablespace_name
+    WHERE EXISTS (SELECT 1 FROM dba_users u WHERE u.default_tablespace = ts.tablespace_name AND u.username = UPPER(p_username));
+  RETURN v_cursor;
+END;
