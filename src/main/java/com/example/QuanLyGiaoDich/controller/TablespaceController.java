@@ -34,16 +34,10 @@ public class TablespaceController {
 
 	@PostMapping("/create-tablespace")
 	public ResponseEntity<String> createTablespace(@RequestBody TablespaceInfo tablespaceInfo) {
-		try {
 			tablespaceService.createTablespace(tablespaceInfo.getTablespaceName(), tablespaceInfo.getFileName(),
 					tablespaceInfo.getSize());
 			return ResponseEntity.ok("Tablespace created successfully");
-		} catch (Exception e) {
-			System.err.println("Lỗi xảy ra: " + e.getMessage());
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body("Error creating tablespace: " + e.getMessage());
-		}
+
 	}
 
 	@GetMapping("/{username}")
