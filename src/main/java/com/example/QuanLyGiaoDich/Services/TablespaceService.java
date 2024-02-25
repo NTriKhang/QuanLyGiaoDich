@@ -56,7 +56,7 @@ public class TablespaceService {
     public List<TablespaceInfo> getUserTablespacesInfo(String username) {
         return jdbcTemplate.execute(
             conn -> {
-                CallableStatement stmt = conn.prepareCall("{ ? = call SYS.GET_USER_TABLESPACES_INFO(?) }");
+                CallableStatement stmt = conn.prepareCall("{ ? = call GET_USER_TABLESPACES_INFO(?) }");
                 stmt.registerOutParameter(1, OracleTypes.CURSOR); 
                 stmt.setString(2, username.toUpperCase()); 
                 return stmt;

@@ -40,7 +40,7 @@ public class TablespaceController {
 
 	}
 
-	@GetMapping("/api/tablespaces-info/{username}")
+	@GetMapping("/{username}")
     public ResponseEntity<List<TablespaceInfo>> getUserTablespaces(@PathVariable String username) {
         try {
             List<TablespaceInfo> tablespaces = tablespaceService.getUserTablespacesInfo(username);
