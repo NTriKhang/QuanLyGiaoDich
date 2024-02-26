@@ -15,7 +15,8 @@ const ManageDBPage = () => {
     const headersDatafile = ['BYTES', 'STATUS', 'TABLESPACE_NAME', 'FILE_ID', 'FILE_NAME'];
     const headersInstance = ['STARTUP_TIME', 'INSTANCE_NUMBER', 'INSTANCE_NAME', 'STATUS', 'VERSION', 'DATABASE_STATUS'];
     const headerControlfile = ['STATUS', 'NAME'];
-    const headerSpfile = ['STATUS', 'NAME'];
+    const headerSpfile = ['VALUE', 'NAME'];
+    const headerDatabase = ['CREATED', 'LOG_MODE', 'CONTROLFILE_TYPE', 'DBID', 'OPEN_MODE', 'NAME'];
 
     const showSga = () => {
         setActiveComponent("Sga");
@@ -94,6 +95,17 @@ const ManageDBPage = () => {
         });
     }
 
+    const showDatabase = () => {
+        setActiveComponent("Database");
+        fetch('http://localhost:8080/api/v1/inforDB/database', {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            setListInfo(data[0]);
+        });
+    }
+
     return (
         <div>
             <div>
@@ -130,8 +142,13 @@ const ManageDBPage = () => {
                     Control Files
                 </Button>
                 <Button
+                    className="me-2"
                     onClick={() => showSpfile()} >
                     Spfile
+                </Button>
+                <Button
+                    onClick={() => showDatabase()} >
+                    Database
                 </Button>
             </div>
             <div className="container mt-5 table-bordered">
@@ -142,6 +159,7 @@ const ManageDBPage = () => {
                 {activeComponent === 'Instance' && <List listInfo={listInfo} headers={headersInstance} />}
                 {activeComponent === 'Controlfile' && <List listInfo={listInfo} headers={headerControlfile} />}
                 {activeComponent === 'Spfile' && <List listInfo={listInfo} headers={headerSpfile} />}
+                {activeComponent === 'Database' && <List listInfo={listInfo} headers={headerDatabase} />}
             </div>
         </div>
     ) 
