@@ -55,6 +55,10 @@ const NavbarComponent = () => {
                                     onClick={() => navigate("/tableManage")} >
                                     Manage Tablespace
                                 </NavDropdown.Item>
+                                <NavDropdown.Item
+                                    onClick={() => navigate("/sessionManage")} >
+                                    Manage Session
+                                </NavDropdown.Item>
                                 <NavDropdown.Item href="#">Another Action</NavDropdown.Item>
                             </NavDropdown>
                         </Nav>

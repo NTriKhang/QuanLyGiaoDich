@@ -246,6 +246,25 @@ BEGIN
     END IF;
 END;
 
+CREATE OR REPLACE FUNCTION get_session_info
+RETURN SYS_REFCURSOR
+IS
+   v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor for
+    SELECT sid, serial#, username, program from v$session where type!='BACKGROUND';
+    Return v_cursor;
+END;
+
+CREATE OR REPLACE PROCEDURE kill_session (
+    p_sid IN NUMBER,
+    p_serial IN NUMBER
+)
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER SYSTEM KILL SESSION ''' || p_sid || ',' || p_serial || ''' IMMEDIATE';
+END;
+
 ------------------------------------Kiệt
 create or replace NONEDITIONABLE FUNCTION get_user_tablespaces_info(p_username IN VARCHAR2)
 RETURN SYS_REFCURSOR IS
