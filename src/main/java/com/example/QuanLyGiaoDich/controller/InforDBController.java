@@ -212,4 +212,29 @@ public class InforDBController {
 	    Map<String, Object> result = jdbcCall.execute();
 	    return (List<InfoControlfileDto>) result.get("spfile_info");
 	}
+	
+	@GetMapping("/database")
+	public List<InfoControlfileDto> getDatabaseInfo() {
+	    SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+	            .withFunctionName("get_database_info")
+	            .returningResultSet("database_info", (rs, rowNum) -> {
+	                ResultSetMetaData metaData = rs.getMetaData();
+	                int columnCount = metaData.getColumnCount();
+	                List<Map<String, Object>> resultList = new ArrayList<>();
+	                
+	                do {
+	                	Map<String, Object> rowData = new HashMap<>();
+	                    for (int i = 1; i <= columnCount; i++) {
+	                        String columnName = metaData.getColumnLabel(i);
+	                        Object value = rs.getObject(i);
+	                        rowData.put(columnName, value);
+	                    }
+	                    resultList.add(rowData);
+	                } while (rs.next());
+	                return resultList;
+	            });
+
+	    Map<String, Object> result = jdbcCall.execute();
+	    return (List<InfoControlfileDto>) result.get("database_info");
+	}
 }

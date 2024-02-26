@@ -201,6 +201,16 @@ BEGIN
     SELECT value, name FROM V$PARAMETER WHERE name = 'spfile';
     RETURN v_cursor;
 END;
+
+create or replace FUNCTION get_database_info
+return SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    select dbid, name, created, open_mode, log_mode, controlfile_type from v$database;
+    RETURN v_cursor;
+END;
 -----------------------------------------------------------------
 V2
 -----------Khang--------
