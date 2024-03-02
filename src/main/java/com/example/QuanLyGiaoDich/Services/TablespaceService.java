@@ -1,31 +1,28 @@
 package com.example.QuanLyGiaoDich.Services;
 
 import com.example.QuanLyGiaoDich.models.TablespaceInfo;
+
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.sql.DataSource;
 
 import org.hibernate.dialect.OracleTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.CallableStatementCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TablespaceService {
 
 	private JdbcTemplate jdbcTemplate;
-	
     @Autowired
     public TablespaceService(DataSource dataSource) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -116,5 +113,34 @@ public class TablespaceService {
             System.err.println("Lỗi xảy ra: " + e.getMessage());
         }
     }
-
+    public List<String> getAllUsers() {
+        String sql = "SELECT username FROM dba_users";
+        try {
+            return jdbcTemplate.queryForList(sql, String.class);
+        } catch (DataAccessException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi xảy ra: " + e.getMessage());
+            return null;
+        }
+    }
+    public void manageDatafileOrTablespace(String tablespaceName, String datafileName) {
+        try {
+            jdbcTemplate.execute(
+                (Connection connection) -> {
+                    CallableStatement cs = connection.prepareCall("{ call MANAGE_DATAFILE_OR_TABLESPACE(?, ?) }");
+                    cs.setString(1, tablespaceName);
+                    cs.setString(2, datafileName);
+                    return cs;
+                },
+                (CallableStatement cs) -> {
+                    cs.execute();
+                    return null;
+                }
+            );
+            
+        } catch (DataAccessException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi xảy ra: " + e.getMessage());
+        }
+    }
 }
