@@ -277,3 +277,41 @@ BEGIN
     WHERE EXISTS (SELECT 1 FROM dba_users u WHERE u.default_tablespace = ts.tablespace_name AND u.username = UPPER(p_username));
   RETURN v_cursor;
 END;
+------------------------------------delete
+CREATE OR REPLACE PROCEDURE manage_datafile_or_tablespace(
+    p_tablespace_name IN VARCHAR2,
+    p_datafile_name IN VARCHAR2
+) AS
+  v_segment_count NUMBER;
+  v_datafile_count NUMBER;
+BEGIN
+    -- Kiểm tra xem có đối tượng dữ liệu nào trong datafile không
+    SELECT COUNT(*)
+    INTO v_segment_count
+    FROM dba_segments
+    WHERE tablespace_name = p_tablespace_name
+    AND (header_file = (SELECT file_id FROM dba_data_files WHERE file_name = p_datafile_name) OR
+         header_file = (SELECT file_id FROM dba_data_files WHERE file_name = p_datafile_name));
+
+    -- Kiểm tra xem tablespace có bao nhiêu datafile
+    SELECT COUNT(*)
+    INTO v_datafile_count
+    FROM dba_data_files
+    WHERE tablespace_name = p_tablespace_name;
+
+    IF v_segment_count = 0 AND v_datafile_count = 1 THEN
+        -- Nếu không có đối tượng dữ liệu và chỉ có một datafile, xóa tablespace
+        EXECUTE IMMEDIATE 'DROP TABLESPACE ' || p_tablespace_name || ' INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS';
+    ELSIF v_segment_count = 0 AND v_datafile_count > 1 THEN
+        -- Nếu không có đối tượng dữ liệu nhưng có nhiều datafile, chỉ xóa datafile
+        EXECUTE IMMEDIATE 'ALTER DATABASE DATAFILE ''' || p_datafile_name || ''' OFFLINE DROP';
+    ELSE
+        -- Nếu datafile chứa dữ liệu, không thực hiện thao tác
+        RAISE_APPLICATION_ERROR(-20000, 'Datafile contains data and cannot be dropped.');
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Xử lý lỗi
+        RAISE;
+END manage_datafile_or_tablespace;
+/
