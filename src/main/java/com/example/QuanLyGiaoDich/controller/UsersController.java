@@ -138,6 +138,23 @@ public class UsersController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
 		}
 	}
+	@GetMapping(path = "/logout_all/{userName}")
+	public ResponseEntity<Object> logoutUserAll(@PathVariable String userName)
+			throws JsonMappingException, JsonProcessingException, SQLException, ClassNotFoundException {
+		// Connection res = databaseService.getConnection(userLoginUpDto.userName,
+		// userLoginUpDto.password);
+		try {
+			System.out.println(userName);
+			
+			userService.logout_all(userName);
+			return new ResponseEntity<>("logout successfully", HttpStatus.OK);
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.err.println("Lỗi xảy ra: " + e.getMessage());
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+		}
+	}
 
 	// Endpoint to update an existing user
 	@PutMapping("/{userID}")

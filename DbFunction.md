@@ -277,3 +277,51 @@ BEGIN
     WHERE EXISTS (SELECT 1 FROM dba_users u WHERE u.default_tablespace = ts.tablespace_name AND u.username = UPPER(p_username));
   RETURN v_cursor;
 END;
+------------v3
+Khang
+tạo profile
+-- create profile
+CREATE PROFILE DW_PROFILE LIMIT
+SESSIONS_PER_USER 2
+IDLE_TIME 1
+CONNECT_TIME 10;
+
+lấy process tương ứng với session
+CREATE OR REPLACE FUNCTION get_process_info(session_id IN NUMBER) RETURN SYS_REFCURSOR IS
+    process_info SYS_REFCURSOR;
+BEGIN
+    OPEN process_info FOR
+        SELECT p.spid AS OS_Process_ID, s.paddr as address,
+        p.PGA_USED_MEM, PGA_ALLOC_MEM,PGA_FREEABLE_MEM, PGA_MAX_MEM
+        FROM   v$process p 
+        JOIN   v$session s ON p.addr = s.paddr 
+        WHERE  s.sid=session_id;     
+    RETURN process_info;
+END;
+
+Sửa lại function create new db user user
+create or replace FUNCTION create_new_db_user (
+    p_username IN VARCHAR2,
+    p_password IN VARCHAR2
+) RETURN NUMBER
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE USER ' || p_username || ' IDENTIFIED BY ' || p_password || ' PROFILE DW_PROFILE';
+
+    EXECUTE IMMEDIATE 'GRANT CONNECT, RESOURCE TO ' || p_username;
+
+    COMMIT;
+
+    RETURN 1; -- Success
+END;
+
+thêm logout all, kill tất cả các session
+create or replace PROCEDURE logout_all(username_in VARCHAR2, p_result OUT NUMBER) IS
+BEGIN
+    p_result := 500;
+    FOR session_rec IN (SELECT sid, serial# FROM v$session WHERE username = upper(username_in)) LOOP
+        EXECUTE IMMEDIATE 'ALTER SYSTEM KILL SESSION ''' || session_rec.sid || ',' || session_rec.serial# || ''' IMMEDIATE';
+    END LOOP;
+
+    p_result := 200;
+END;
