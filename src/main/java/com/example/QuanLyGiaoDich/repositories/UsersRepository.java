@@ -31,4 +31,7 @@ public interface UsersRepository extends JpaRepository<Users, String> {
 	
 	@Procedure(procedureName = "logout")
 	int logout(@Param("username_in") String username);
+	
+	@Procedure(procedureName = "logout_all")
+	int logout_all(@Param("username_in") String username);
 }

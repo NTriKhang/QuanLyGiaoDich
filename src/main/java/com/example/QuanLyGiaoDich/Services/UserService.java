@@ -36,8 +36,9 @@ public class UserService {
 	}
 	public Boolean connect_v2(String userName, String password, String database)
 			throws SQLException, ClassNotFoundException {
-		if(usersRepository.checkUserSignin(userName) == 200)
-			return false;
+		/*
+		 * if(usersRepository.checkUserSignin(userName) == 200) return false;
+		 */
 		if (userName == "sys" || userName == "SYS") {
 			userName += " as sysdba";
 		}
@@ -66,6 +67,10 @@ public class UserService {
 	}
 	public void logout(String username) {
 		usersRepository.logout(username);
+
+	}
+	public void logout_all(String username) {
+		usersRepository.logout_all(username);
 
 	}
 }

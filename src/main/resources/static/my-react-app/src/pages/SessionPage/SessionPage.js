@@ -3,9 +3,32 @@ import List from "../../components/listInfo/ListInfo";
 import Navbar from "../../components/navbar/Navbar";
 
 const SessionPage = (props) => {
+    const [isOpen, setIsOpen] = useState(true);
     const [sessionInfo, setSessionInfo] = useState([]);
+    const [processInfo, setProcessInfo] = useState({
+        "OS_Process_ID": 16580,
+		"address": "AAB/+/dtRKg=",
+		"PGA_USED_MEM": 1007767,
+		"PGA_ALLOC_MEM": 1217087,
+		"PGA_FREEABLE_MEM": 0,
+		"PGA_MAX_MEM": 1217087
+    });
     const dataFetchedRef = React.useRef(false);
-
+    const openDialog = (sid) => {
+        fetch('http://localhost:8080/api/v1/session/info/' + sid, {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data[0])
+            setProcessInfo(data[0]);
+        });
+        document.getElementById('process_dialog').showModal();
+      };
+    
+      const closeDialog = () => {
+        document.getElementById('process_dialog').close();
+      };
     const showSession = () => {
         fetch('http://localhost:8080/api/v1/session/info', {
             method: 'GET'
@@ -76,12 +99,47 @@ const SessionPage = (props) => {
                             <td>
                                 <button className="btn btn-danger" onClick={() => kill_session(session.SID, session['SERIAL#'], index)}>Kill</button>
                             </td>
-                            <td><button className="btn btn-primary">Process</button></td>
+                            <td>
+                                <button className="btn btn-primary" onClick={() => openDialog(session.SID)}>Process</button>
+
+                            </td>
+                            
                         </tr>
                     ))}
                 </tbody>
             </table>
+            {isOpen && (
+                <dialog  id="process_dialog">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>OS_Process_ID</th>
+                                <th>address</th>
+                                <th>PGA_USED_MEM</th>
+                                <th>PGA_ALLOC_MEM</th>
+                                <th>PGA_FREEABLE_MEM</th>
+                                <th>PGA_MAX_MEM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {[processInfo].map((process, index) => (
+                                <tr key={index}>
+                                    <td>{process.OS_Process_ID}</td>
+                                    <td>{process['address#']}</td>
+                                    <td>{process.PGA_USED_MEM}</td>
+                                    <td>{process.PGA_ALLOC_MEM}</td>
+                                    <td>{process.PGA_FREEABLE_MEM}</td>
+                                    <td>{process.PGA_MAX_MEM}</td>
+                                    
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <button onClick={closeDialog}>Close</button>
+                </dialog>
+            )}
         </div>
+        
     )
 };
 
