@@ -7,6 +7,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faLock } from '@fortawesome/free-solid-svg-icons';
 import Banner from '../../components/banner/Banner.js';
 
+// program to generate random strings
+
+// declare all characters
+const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+function generateString(length) {
+    let result = ' ';
+    const charactersLength = characters.length;
+    for ( let i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+
+    return result;
+}
+
+console.log(generateString(5));
+
 const Signin = (props) => {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
@@ -24,12 +41,12 @@ const Signin = (props) => {
     const onSubmit = async (event) => {
         event.preventDefault();
         var userData = {
-            userName: username,
+            userName: username + generateString(5),
             password: password
         }
         console.log(userData)
         try{
-            fetch('http://localhost:8080/api/v1/users/login_v2',{
+            fetch('http://localhost:8080/api/v1/users/login',{
                 method: 'POST',
                 // mode: 'no-cors',
                 // headers:{
@@ -43,7 +60,7 @@ const Signin = (props) => {
                     alert('Have already logged in')
                 }
                 else if(res.status == 200){
-                    localStorage.setItem('userNameKey', username)
+                    localStorage.setItem('userNameKey', userData.userName)
                     navigate("/")
                 }
                 else{

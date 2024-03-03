@@ -73,6 +73,7 @@ export default function Signup () {
                 body: formData
             }).then(res => {
                 console.log('submit successfully', res)
+                navigate("/signin")
             });
         }catch{
             console.log("err")
