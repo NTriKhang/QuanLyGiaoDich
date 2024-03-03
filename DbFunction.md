@@ -299,21 +299,6 @@ BEGIN
     RETURN process_info;
 END;
 
-Sửa lại function create new db user user
-create or replace FUNCTION create_new_db_user (
-    p_username IN VARCHAR2,
-    p_password IN VARCHAR2
-) RETURN NUMBER
-IS
-BEGIN
-    EXECUTE IMMEDIATE 'CREATE USER ' || p_username || ' IDENTIFIED BY ' || p_password || ' PROFILE DW_PROFILE';
-
-    EXECUTE IMMEDIATE 'GRANT CONNECT, RESOURCE TO ' || p_username;
-
-    COMMIT;
-
-    RETURN 1; -- Success
-END;
 
 thêm logout all, kill tất cả các session
 create or replace PROCEDURE logout_all(username_in VARCHAR2, p_result OUT NUMBER) IS
@@ -325,3 +310,71 @@ BEGIN
 
     p_result := 200;
 END;
+-- chỉnh lại đăng ký user, cấp thêm quyền select, insert
+create or replace FUNCTION create_new_db_user (
+    p_username IN VARCHAR2,
+    p_password IN VARCHAR2
+) RETURN NUMBER
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE USER ' || p_username || ' IDENTIFIED BY ' || p_password || ' PROFILE DW_PROFILE';
+
+    EXECUTE IMMEDIATE 'GRANT CONNECT, RESOURCE TO ' || p_username;
+    EXECUTE IMMEDIATE 'GRANT SELECT, INSERT ON TRANSACTION TO ' || p_username;
+    EXECUTE IMMEDIATE 'GRANT SELECT ON USERS TO ' || p_username;
+    EXECUTE IMMEDIATE 'GRANT EXECUTE ANY PROCEDURE TO ' || p_username;
+    EXECUTE IMMEDIATE 'GRANT EXECUTE ANY FUNCTION TO ' || p_username;
+
+    COMMIT;
+
+    RETURN 1; -- Success
+END;
+-- tao fga policy de theo doi bang transaction
+BEGIN
+    DBMS_FGA.add_policy(
+        object_schema   => 'KHANG3',
+        object_name     => 'TRANSACTION',
+        policy_name     => 'FGA_TRANSACTION',
+        statement_types =>  'SELECT, INSERT, UPDATE, DELETE'
+    );
+END;
+
+--- procedure de insert vao transaction 
+CREATE OR REPLACE PROCEDURE insert_transaction (
+    p_sender_user_name IN VARCHAR2,
+    p_recipient_user_name IN VARCHAR2,
+    p_transaction_type IN VARCHAR2,
+    p_amount IN NUMBER
+)
+IS
+    v_id NUMBER;
+    v_userSenderId VARCHAR2(50);
+    v_userRecipentId VARCHAR2(50);
+BEGIN
+    BEGIN
+        SELECT transactionid
+        INTO v_id
+        FROM Khang3.transaction
+        ORDER BY TRANSACTIONID
+        FETCH FIRST 1 ROWS ONLY;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            -- No rows found, assign v_id to null
+            v_id := 0;
+    END;
+    
+    SELECT userId 
+    into v_userSenderId
+    from users
+    where USERNAME=p_sender_user_name;
+    
+    SELECT userId 
+    into v_userRecipentId
+    from users
+    where USERNAME=p_recipient_user_name;
+        
+    INSERT INTO Khang3.transaction (TRANSACTIONID, SENDERUSERID, RECIPIENTUSERID, TRANSACTIONTYPE, AMOUNT, TRANSACTIONDATE)
+    VALUES (v_id + 1, v_userSenderId, v_userRecipentId, p_transaction_type, p_amount, CURRENT_TIMESTAMP);
+    COMMIT; -- Commit the transaction
+END;
+/

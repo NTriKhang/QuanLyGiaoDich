@@ -11,7 +11,7 @@ const NavbarComponent = () => {
         if(localStorage.getItem('userNameKey') != null){
             try{
                 console.log('trye')
-                fetch('http://localhost:8080/api/v1/users/logout_v2/' + localStorage.getItem('userNameKey'),{
+                fetch('http://localhost:8080/api/v1/users/logout/' + localStorage.getItem('userNameKey'),{
                     method: 'GET',
                     // mode: 'no-cors',
                 }).then(res => {

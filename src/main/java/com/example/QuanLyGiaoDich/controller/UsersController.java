@@ -82,11 +82,12 @@ public class UsersController {
 		ObjectMapper mapper = new ObjectMapper();
 		UserLoginDto userLoginUpDto = mapper.readValue(userData, UserLoginDto.class);
 		System.out.println(userLoginUpDto.userName + " " + userLoginUpDto.password);
-		if (MapUserConnection.mapUserConnection.containsKey(userLoginUpDto.userName)) {
+		String[] userName = userLoginUpDto.userName.split(" ");
+		if (MapUserConnection.mapUserConnection.containsKey(userName[0] + ' ' + userName[1])) {
 			return new ResponseEntity<>("have logged in on another devices", HttpStatus.CONFLICT);
 		}
-		Connection conn = userService.connect(userLoginUpDto.userName, userLoginUpDto.password, " ");
-		MapUserConnection.mapUserConnection.put(userLoginUpDto.userName, conn);
+		Connection conn = userService.connect(userName[0], userLoginUpDto.password, " ");
+		MapUserConnection.mapUserConnection.put(userName[0] + ' ' +  userName[1], conn);
 		return new ResponseEntity<>("login success", HttpStatus.OK);
 	}
 
@@ -112,7 +113,7 @@ public class UsersController {
 		// userLoginUpDto.password);
 		Connection conn = null;
 		System.out.println(userName);
-		if (MapUserConnection.mapUserConnection.containsKey(userName)) {
+ 		if (MapUserConnection.mapUserConnection.containsKey(userName)) {
 			conn = MapUserConnection.mapUserConnection.get(userName);
 		} else {
 			return new ResponseEntity<>("no connection", HttpStatus.OK);
