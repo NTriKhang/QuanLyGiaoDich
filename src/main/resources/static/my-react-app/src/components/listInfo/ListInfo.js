@@ -13,7 +13,7 @@ const List = (props) => {
             {listInfo.map((item) => (
             <tr key={item.id}>
                 {Object.values(item).map((value, index) => (
-                    <td key={index}>{value == null ? "(NULL)" : value}</td>
+                    <td className="text-center" key={index}>{value == null ? "(NULL)" : value}</td>
                 ))}
             </tr>
             ))}
