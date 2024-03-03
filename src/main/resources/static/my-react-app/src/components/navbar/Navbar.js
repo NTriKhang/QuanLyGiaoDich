@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { useNavigate } from "react-router-dom";
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
@@ -6,6 +6,8 @@ import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 
 const NavbarComponent = () => {
+    const [username, setUsername] = useState("");
+
     const onSignOutClick = () => {
         // You'll update this function later
         if(localStorage.getItem('userNameKey') != null){
@@ -19,6 +21,7 @@ const NavbarComponent = () => {
                     localStorage.removeItem("userNameKey")
                     alert('logout success')
                     document.getElementById('signOutBtn').style.display = 'none';
+                    document.getElementById('usernameDisplay').style.display = 'none';
                     document.getElementById('signInBtn').style.display = 'block';
                 });
             }catch{
@@ -35,6 +38,7 @@ const NavbarComponent = () => {
         }
         else{
             document.getElementById('signInBtn').style.display = 'none';
+            setUsername(localStorage.getItem("userNameKey"))
         }
     }, [])
     return (
@@ -59,11 +63,20 @@ const NavbarComponent = () => {
                                     onClick={() => navigate("/sessionManage")} >
                                     Manage Session
                                 </NavDropdown.Item>
+                                <NavDropdown.Item
+                                    onClick={() => navigate("/manageUsersPage")} >
+                                    Manage Users
+                                </NavDropdown.Item>
+                                <NavDropdown.Item
+                                    onClick={() => navigate("/tablesManagement")} >
+                                    Manage Tables
+                                </NavDropdown.Item>
                                 <NavDropdown.Item href="#">Another Action</NavDropdown.Item>
                             </NavDropdown>
                         </Nav>
                         <Nav>
                             <Nav.Link id="signInBtn" href="/signin">Signin</Nav.Link>
+                            <Nav.Link id="usernameDisplay" href="/signin">{username}</Nav.Link>
                             <Nav.Link id="signOutBtn"><span onClick={onSignOutClick}>Signout</span></Nav.Link>
                             <Nav.Link href="/signup">Signup</Nav.Link>
                         </Nav>

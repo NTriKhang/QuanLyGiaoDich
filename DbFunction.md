@@ -277,3 +277,30 @@ BEGIN
     WHERE EXISTS (SELECT 1 FROM dba_users u WHERE u.default_tablespace = ts.tablespace_name AND u.username = UPPER(p_username));
   RETURN v_cursor;
 END;
+
+v3
+-----Hieu-----
+CREATE OR REPLACE FUNCTION get_list_user
+RETURN SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT USER_ID, USERNAME, ACCOUNT_STATUS FROM DBA_USERS;
+    RETURN v_cursor;
+END;
+
+CREATE OR REPLACE FUNCTION get_info_user_by_id(
+    id IN VARCHAR2
+)
+RETURN SYS_REFCURSOR
+IS
+    v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT USER_ID, USERNAME, CREATED, EXPIRY_DATE, ACCOUNT_STATUS, LAST_LOGIN, PROFILE 
+    FROM DBA_USERS
+    WHERE USER_ID = id;
+
+    RETURN v_cursor;
+END;

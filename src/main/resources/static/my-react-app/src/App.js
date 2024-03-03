@@ -6,8 +6,11 @@ import './App.css';
 import { useState } from 'react';
 import Signup from './pages/SignupPage/SignupPage';
 import ManageDBPage from './pages/ManagePage/ManageDBPage';
+import ManageUsersPage from './pages/ManagePage/ManageUsersPage';
+import UserDetailAdminPage from './pages/ManagePage/UserDetailAdminPage';
 import TablespaceManagement from './pages/TableSpacePage/TablespaceManagement';
 import SessionPage from './pages/SessionPage/SessionPage';
+import TablesManagement from './pages/TablesPage/TablesManagementPage';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -21,7 +24,10 @@ function App() {
           <Route path="/signin" element={<Signin setLoggedIn={setLoggedIn} setEmail={setEmail} />} />
           <Route path='/signup' element={<Signup/>}/>
           <Route path='/manageDBPage' element={<ManageDBPage/>} />
+          <Route path='/manageUsersPage' element={<ManageUsersPage/>} />
+          <Route path='/userDetailAdminPage' element={<UserDetailAdminPage/>} />
           <Route path='/tableManage' element={<TablespaceManagement/>} />
+          <Route path='/tablesManagement' element={<TablesManagement/>} />
           <Route path='/sessionManage' element={<SessionPage/>} />
         </Routes>
       </BrowserRouter>

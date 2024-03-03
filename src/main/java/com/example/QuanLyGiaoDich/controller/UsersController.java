@@ -1,5 +1,6 @@
 package com.example.QuanLyGiaoDich.controller;
 
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,16 +11,20 @@ import com.example.QuanLyGiaoDich.Configure.MapUserConnection;
 import com.example.QuanLyGiaoDich.Services.UserService;
 import com.example.QuanLyGiaoDich.dto.UserLoginDto;
 import com.example.QuanLyGiaoDich.dto.UserSignUpDto;
+import com.example.QuanLyGiaoDich.dto.UserListDto;
+import com.example.QuanLyGiaoDich.dto.UserDetailAdminDto;
+import com.example.QuanLyGiaoDich.dto.UserInfoDto;
 import com.example.QuanLyGiaoDich.models.Users;
 import com.example.QuanLyGiaoDich.repositories.UsersRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
 
+import java.io.Console;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,6 +47,38 @@ public class UsersController {
 		return new ResponseEntity<>(users, HttpStatus.OK);
 	}
 
+	@GetMapping("/listUser")
+	public List<UserListDto> getListUser(){
+		try {
+			return userService.getListUser();
+		}
+		catch (Exception e) {
+			System.out.println(e);
+		}
+		return null;
+	}
+	
+	@GetMapping("/TableUser")
+	public List<Users> getTableUser(){
+		try {
+			return userService.getTableUser();
+		}
+		catch (Exception e) {
+			System.out.println(e);
+		}
+		return null;
+	}
+	
+	@PostMapping("/findUserById")
+	public ResponseEntity<UserDetailAdminDto> findUserById(@RequestBody String userInfo) throws JsonMappingException, JsonProcessingException {
+	    ObjectMapper mapper = new ObjectMapper();
+	    UserInfoDto userDetail = mapper.readValue(userInfo, UserInfoDto.class);
+	    System.out.println(userDetail);
+	    UserDetailAdminDto result = userService.getUserInfoById(userDetail.user_id);
+	    System.out.println(result);
+	    return new ResponseEntity<UserDetailAdminDto>(result, HttpStatus.OK);
+	}
+	
 	// Endpoint to get a user by ID
 	@GetMapping("/{userID}")
 	public ResponseEntity<Users> getUserById(@PathVariable String userID) {
