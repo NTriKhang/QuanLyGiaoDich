@@ -2,6 +2,7 @@ package com.example.QuanLyGiaoDich.controller;
 
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -216,4 +218,21 @@ public class UsersController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
+	@PostMapping("/submitAccount")
+	public ResponseEntity<?> submitAccount(@RequestBody Map<String, String> payload) {
+	    String username = payload.get("username");
+	    String tablespace = payload.get("tablespace");
+
+	    try {
+	        userService.submitAccount(username, tablespace);
+	        return ResponseEntity.ok(
+	                "username " + username + " and tablespace " + tablespace + " chọn thành công.");
+	    } catch (DataAccessException e) {
+	        e.printStackTrace();
+	        System.err.println("Lỗi xảy ra: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi xảy ra: " + e.getMessage());
+	    }
+	}
+
+
 }

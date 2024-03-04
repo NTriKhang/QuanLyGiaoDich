@@ -20,7 +20,8 @@ const UserDetailAdminPage = (props) => {
                 expiry_date={detaiUser.expiry_date}
                 account_status={detaiUser.account_status}
                 last_login={detaiUser.last_login}
-                profile={detaiUser.profile} />
+                profile={detaiUser.profile}
+                tablespace={detaiUser.tablespace} />
         </div>
     )
 };

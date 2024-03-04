@@ -441,3 +441,18 @@ BEGIN
 
     RETURN v_cursor;
 END;
+
+------kiet
+
+CREATE OR REPLACE PROCEDURE Change_TBSpace_Unlock(
+    p_user_name IN VARCHAR2,
+    p_new_tablespace IN VARCHAR2
+) AS
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' DEFAULT TABLESPACE ' || p_new_tablespace;
+    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' ACCOUNT UNLOCK';
+    DBMS_OUTPUT.PUT_LINE('User ' || p_user_name || ' has been modified and unlocked successfully.');
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END Change_TBSpace_Unlock;

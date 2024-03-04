@@ -12,6 +12,7 @@ public class UserDetailAdminDto {
 	public String account_status;
 	public String last_login;
 	public String profile;
+	public String tablespace;
 	
 	public UserDetailAdminDto() {
 		super();
@@ -21,9 +22,10 @@ public class UserDetailAdminDto {
 		this.expiry_date = "";
 		this.account_status = "";
 		this.last_login = "";
+		this.tablespace ="";
 	}
 	public UserDetailAdminDto(String user_id, String username, String created, String expiry_date,
-			String account_status, String last_login) {
+			String account_status, String last_login, String tablespace) {
 		super();
 		this.user_id = user_id;
 		this.username = username;
@@ -31,6 +33,7 @@ public class UserDetailAdminDto {
 		this.expiry_date = expiry_date;
 		this.account_status = account_status;
 		this.last_login = last_login;
+		this.tablespace = tablespace;
 	}
 	public String getUser_id() {
 		return user_id;
@@ -71,5 +74,11 @@ public class UserDetailAdminDto {
 	public void setProfile(String profile) {
 		// TODO Auto-generated method stub
 		this.profile = profile;
+	}
+	public String getTableSpace() {
+		return tablespace;
+	}
+	public void setTableSpace(String tablespace) {
+		this.tablespace = tablespace;
 	}
 }

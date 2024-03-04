@@ -1,6 +1,7 @@
 package com.example.QuanLyGiaoDich.Services;
 
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSetMetaData;
@@ -17,6 +18,7 @@ import org.apache.catalina.User;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.query.NativeQuery.ReturnableResultNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.SqlParameter;
@@ -165,5 +167,21 @@ public class UserService {
 	            });
 	    Map<String, Object> result = jdbcCall.execute();
 	    return (List<Users>) result.get("table_user");
+	}
+	public void submitAccount(String username, String tablespace) {
+		try {
+			jdbcTemplate.execute((Connection connection) -> {
+				CallableStatement cs = connection.prepareCall("{ call CHANGE_TBSPACE_UNLOCK(?, ?) }");
+				cs.setString(1, username);
+				cs.setString(2, tablespace);
+				return cs;
+			}, (CallableStatement cs) -> {
+				cs.execute();
+				return null;
+			});
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			System.err.println("Lỗi xảy ra: " + e.getMessage());
+		}	
 	}
 }
