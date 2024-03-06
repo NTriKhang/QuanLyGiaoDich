@@ -414,7 +414,25 @@ EXCEPTION
         -- Xử lý lỗi
         RAISE;
 END manage_datafile_or_tablespace;
+--------new
+CREATE OR REPLACE FUNCTION get_audit_policies RETURN SYS_REFCURSOR IS
+    audit_cursor SYS_REFCURSOR;
+BEGIN
+    -- Open a cursor for the query
+    OPEN audit_cursor FOR
+        SELECT OBJECT_SCHEMA,
+                OBJECT_NAME,
+                POLICY_OWNER,
+                POLICY_NAME,
+                ENABLED
+                FROM DBA_AUDIT_POLICIES;
 
+    -- Return the cursor
+    RETURN audit_cursor;
+END;
+/
+
+desc DBA_AUDIT_POLICIES;
 
 -----Hieu-----
 CREATE OR REPLACE FUNCTION get_list_user

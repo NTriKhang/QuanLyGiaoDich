@@ -11,6 +11,7 @@ import UserDetailAdminPage from './pages/ManagePage/UserDetailAdminPage';
 import TablespaceManagement from './pages/TableSpacePage/TablespaceManagement';
 import SessionPage from './pages/SessionPage/SessionPage';
 import TablesManagement from './pages/TablesPage/TablesManagementPage';
+import ManageAuditPage from './pages/AuditPage/ManageAuditPage';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -29,6 +30,7 @@ function App() {
           <Route path='/tableManage' element={<TablespaceManagement/>} />
           <Route path='/tablesManagement' element={<TablesManagement/>} />
           <Route path='/sessionManage' element={<SessionPage/>} />
+          <Route path='/auditMnage' element={<ManageAuditPage/>} />
         </Routes>
       </BrowserRouter>
     </div>
