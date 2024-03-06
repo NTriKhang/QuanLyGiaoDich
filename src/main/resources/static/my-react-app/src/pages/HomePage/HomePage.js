@@ -33,8 +33,8 @@ const Home = (props) => {
               if(res.status == 201){
                   alert("Tranfer success")
               }
-              else{
-                  alert(res.body)
+              else if(res.status == 409){
+                  alert("Your connection was aborted")
               }
 
           });

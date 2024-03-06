@@ -20,9 +20,7 @@ const NavbarComponent = () => {
                     console.log('submit successfully', res)
                     localStorage.removeItem("userNameKey")
                     alert('logout success')
-                    document.getElementById('signOutBtn').style.display = 'none';
-                    document.getElementById('usernameDisplay').style.display = 'none';
-                    document.getElementById('signInBtn').style.display = 'block';
+                    navigate('/signIn')
                 });
             }catch{
                 console.log("err")
@@ -30,6 +28,27 @@ const NavbarComponent = () => {
         }
 
     }
+    const onSignOutAllClick = () => {
+        // You'll update this function later
+        if(localStorage.getItem('userNameKey') != null){
+            try{
+                console.log('trye')
+                fetch('http://localhost:8080/api/v1/users/logout_all/' + localStorage.getItem('userNameKey').split(' ')[0],{
+                    method: 'GET',
+                    // mode: 'no-cors',
+                }).then(res => {
+                    console.log('submit successfully', res)
+                    localStorage.removeItem("userNameKey")
+                    alert('logout all success')
+                    navigate('/signIn')
+                });
+            }catch{
+                console.log("err")
+            }
+        }
+
+    }
+
     const navigate = useNavigate();
     React.useEffect(() =>  {
         if(localStorage.getItem('userNameKey') == null)
@@ -82,7 +101,7 @@ const NavbarComponent = () => {
                             <Nav.Link id="signInBtn" href="/signin">Signin</Nav.Link>
                             <Nav.Link id="usernameDisplay" href="/signin">{username}</Nav.Link>
                             <Nav.Link id="signOutBtn"><span onClick={onSignOutClick}>Signout</span></Nav.Link>
-                            <Nav.Link href="/signup">Signup</Nav.Link>
+                            <Nav.Link id="signOutAllBtn"><span onClick={onSignOutAllClick}>Signout all</span></Nav.Link>
                         </Nav>
                 </Navbar.Collapse>
             </Container>
