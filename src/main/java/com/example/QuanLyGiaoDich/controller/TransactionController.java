@@ -47,12 +47,18 @@ public class TransactionController {
     // Endpoint to create a new transaction
     @PostMapping
     public ResponseEntity<TransactionDto> createTransaction(@RequestBody String transaction) throws ClassNotFoundException, SQLException, JsonProcessingException {
-    	ObjectMapper mapper = new ObjectMapper();
-    	TransactionDto createdTransaction = mapper.readValue(transaction, TransactionDto.class);
-    	boolean res = transactionService.add_transaction(createdTransaction);
-    	if(res == false)
-    		return new ResponseEntity<>(createdTransaction, HttpStatus.CONFLICT);
-        return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
+    	try {
+    		ObjectMapper mapper = new ObjectMapper();
+        	TransactionDto createdTransaction = mapper.readValue(transaction, TransactionDto.class);
+        	boolean res = transactionService.add_transaction(createdTransaction);
+        	if(res == false)
+        		return new ResponseEntity<>(createdTransaction, HttpStatus.CONFLICT);
+            return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+			return new ResponseEntity<TransactionDto>(HttpStatus.BAD_REQUEST);
+		}
     }
 
     // Endpoint to update an existing transaction
