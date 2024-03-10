@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 
 const ManageAuditPage = (props) => {
+    const navigate = useNavigate();
     const dataFetchedRef = React.useRef(false);
     const [listInfo, setListInfo] = useState([]);
 
@@ -28,7 +29,11 @@ const ManageAuditPage = (props) => {
         <div>
           <Navbar />
           <div className="container">
-          <button className="btn btn-primary">Create new</button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => {
+                navigate("/addAudit")
+            }} >Create new</button>
           <table>
                   <thead>
                       <tr>
