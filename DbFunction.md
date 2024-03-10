@@ -477,18 +477,6 @@ END Change_TBSpace_Unlock;
 
 -----set quota
 
-CREATE OR REPLACE PROCEDURE Change_TBSpace_Unlock(
-    p_user_name IN VARCHAR2,
-    p_new_tablespace IN VARCHAR2,
-    p_quota IN NUMBER
-) AS
-BEGIN
-    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' QUOTA ' || TO_CHAR(p_quota) || 'M ON ' || p_new_tablespace;
-    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' DEFAULT TABLESPACE ' || p_new_tablespace;
-    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' ACCOUNT UNLOCK';
-END;
-
-
 CREATE OR REPLACE PROCEDURE get_tablespace_size(
     p_tablespace_name IN VARCHAR2,
     p_tablespace_size OUT NUMBER
@@ -543,3 +531,20 @@ BEGIN
 END;
 /
 
+---Hieu---
+create or replace FUNCTION ADD_FGA_POLICY (
+    p_object_schema IN VARCHAR2,
+    p_object_name IN VARCHAR2,
+    p_policy_name IN VARCHAR2,
+    p_type IN VARCHAR2
+) RETURN VARCHAR2 AS
+BEGIN
+    DBMS_FGA.add_policy(
+        object_schema   => p_object_schema,
+        object_name     => p_object_name,
+        policy_name     => p_policy_name,
+        statement_types => p_type
+    );
+
+    RETURN 'Policy added successfully';
+END ADD_FGA_POLICY;

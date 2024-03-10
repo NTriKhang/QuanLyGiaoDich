@@ -28,6 +28,8 @@ const Home = (props) => {
 			});
 	};
 
+        
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 
