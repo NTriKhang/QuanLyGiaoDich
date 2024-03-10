@@ -1,86 +1,104 @@
-import React, { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom";
-import "./HomePage.css"
-import Navbar from "../../components/navbar/Navbar.js";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './HomePage.css';
+import Navbar from '../../components/navbar/Navbar.js';
 
 const Home = (props) => {
-    const [userRecipentName, setUsername] = useState('');
-    const [money, setMoney] = useState('');
-    const navigate = useNavigate();
+	const [userRecipientName, setUsername] = useState('');
+	const [money, setMoney] = useState('');
+	const [alertMessage, setAlertMessage] = useState('');
+	const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Perform transaction handling here
-        console.log('Username:', userRecipentName);
-        console.log('Money:', money);
+	useEffect(() => {
+		if (!localStorage.getItem('userNameKey')) {
+			navigate('/signin');
+		}
+	}, [navigate]);
 
-        var transaction = {
-          userName: localStorage.getItem('userNameKey'),
-          recipentUserName: userRecipentName,
-          amount: money
-        }
-        console.log(transaction)
-        try{
-          fetch('http://localhost:8080/api/v1/transactions',{
-              method: 'POST',
-              // mode: 'no-cors',
-              // headers:{
-              //     "Content-type": "multipart/form-data",
-              // },
-              body: JSON.stringify(transaction)
-          }).then(res => {
-              console.log(res)
-              if(res.status == 201){
-                  alert("Tranfer success")
-              }
-              else{
-                  alert(res.body)
-              }
+	const fetchLatestAlert = () => {
+		fetch('http://localhost:8080/api/v1/alerts/latest')
+			.then(response => response.json())
+			.then(data => {
+				if (data.message) {
+					setAlertMessage(data.message);
+				}
+			})
+			.catch(error => {
+				console.error("Error:", error);
+			});
+	};
 
-          });
-      }catch{
-          console.log("err")
-      }
-        // Reset form fields
-        setUsername('');
-        setMoney('');
-    };
+	const handleSubmit = async (e) => {
+		e.preventDefault();
 
-    useEffect(() => {
-        if (!localStorage.getItem("userNameKey")) {
-            navigate("/signin");
-        }
-      }, []);
+		const transaction = {
+			userName: localStorage.getItem('userNameKey'),
+			recipientUserName: userRecipientName,
+			amount: parseFloat(money),
+		};
 
-    return (
-       <div>
-            <Navbar />
-            <h2>Transaction Form</h2>
-      <form onSubmit={handleSubmit} className="center_form">
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={userRecipentName}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter username"
-            required
-          />
-        </div>
-        <div>
-          <label>Money:</label>
-          <input
-            type="number"
-            value={money}
-            onChange={(e) => setMoney(e.target.value)}
-            placeholder="Enter money amount"
-            required
-          />
-        </div>
-        <button type="submit">Submit</button>
-      </form>
-       </div>
-    )
-}
+		try {
+			const response = await fetch('http://localhost:8080/api/v1/transactions', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(transaction),
+			});
 
-export default Home
+			const data = await response.json();
+
+			if (response.ok) {
+				if (data.warning) {
+					alert(data.warning);
+					setAlertMessage(data.warning);
+				} else {
+					alert('Transfer successful');
+					setAlertMessage('');
+				}
+			} else {
+				alert(data.message || 'Failed to transfer.');
+			}
+		} catch (error) {
+			console.error('Error:', error);
+			alert('An error occurred while processing the transaction');
+		}
+		setUsername('');
+		setMoney('');
+	};
+
+
+
+	return (
+		<div>
+			<Navbar />
+			{alertMessage && <div className="alert">{alertMessage}</div>}
+			<h2>Transaction Form</h2>
+			<form onSubmit={handleSubmit} className="center_form">
+				<div>
+					<label>Username:</label>
+					<input
+						type="text"
+						value={userRecipientName}
+						onChange={(e) => setUsername(e.target.value)}
+						placeholder="Enter recipient's username"
+						required
+					/>
+				</div>
+				<div>
+					<label>Money:</label>
+					<input
+						type="number"
+						value={money}
+						onChange={(e) => setMoney(e.target.value)}
+						placeholder="Enter money amount"
+						required
+					/>
+				</div>
+				<button type="submit">Submit</button>
+			</form>
+		</div>
+	);
+};
+
+export default Home;

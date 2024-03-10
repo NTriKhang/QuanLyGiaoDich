@@ -474,3 +474,72 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
 END Change_TBSpace_Unlock;
+
+-----set quota
+
+CREATE OR REPLACE PROCEDURE Change_TBSpace_Unlock(
+    p_user_name IN VARCHAR2,
+    p_new_tablespace IN VARCHAR2,
+    p_quota IN NUMBER
+) AS
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' QUOTA ' || TO_CHAR(p_quota) || 'M ON ' || p_new_tablespace;
+    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' DEFAULT TABLESPACE ' || p_new_tablespace;
+    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' ACCOUNT UNLOCK';
+END;
+
+
+CREATE OR REPLACE PROCEDURE get_tablespace_size(
+    p_tablespace_name IN VARCHAR2,
+    p_tablespace_size OUT NUMBER
+) AS
+BEGIN
+    SELECT SUM(bytes)/1024/1024 INTO p_tablespace_size 
+    FROM dba_data_files
+    WHERE tablespace_name = p_tablespace_name;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_tablespace_size := -1; 
+    WHEN OTHERS THEN
+        p_tablespace_size := -1; 
+END;
+-------thiet lap canh bao 
+BEGIN
+    DBMS_FGA.ADD_POLICY(
+        object_schema      => 'test', 
+        object_name        => 'Transaction', 
+        policy_name        => 'high_value_transfer_audit',
+        audit_column       => 'Amount', 
+        audit_condition    => 'Amount > 100000000 AND TransactionType = ''Transfer'' AND TransactionDate >= TRUNC(SYSDATE)',
+        handler_schema     => 'test', 
+        handler_module     => 'alert_high_value_transfer',
+        enable             => TRUE
+    );
+END;
+/
+
+CREATE TABLE Alert (
+    AlertID NUMBER PRIMARY KEY,
+    Message VARCHAR2(255),
+    CreatedDate TIMESTAMP
+);
+
+CREATE SEQUENCE ALERT_SEQ
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+
+CREATE OR REPLACE PROCEDURE alert_high_value_transfer (
+    object_schema    VARCHAR2,
+    object_name      VARCHAR2,
+    policy_name      VARCHAR2)
+IS
+BEGIN
+    INSERT INTO Alert (AlertID, Message, CreatedDate)
+    VALUES (ALERT_SEQ.NEXTVAL, 'Cảnh báo: Giao dịch vượt quá 100 triệu', SYSDATE);
+    COMMIT;
+END;
+/
+

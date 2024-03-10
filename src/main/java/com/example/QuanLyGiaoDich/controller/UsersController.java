@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.example.QuanLyGiaoDich.Configure.MapUserConnection;
 import com.example.QuanLyGiaoDich.Services.UserService;
@@ -23,9 +24,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Default;
 
 import java.io.Console;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -218,21 +222,49 @@ public class UsersController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
 	}
+	@GetMapping("/tablespaces")
+    public ResponseEntity<List<String>> getTablespaces() {
+        try {
+            List<String> tablespaces = userService.getAllTablespaces();
+            return ResponseEntity.ok(tablespaces);
+        } catch (Exception e) {
+            System.err.println("Lỗi xảy ra khi lấy danh sách tablespace: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 	@PostMapping("/submitAccount")
-	public ResponseEntity<?> submitAccount(@RequestBody Map<String, String> payload) {
-	    String username = payload.get("username");
-	    String tablespace = payload.get("tablespace");
-
+	public ResponseEntity<?> setDataQuota(@RequestBody Map<String, Object> data) {
 	    try {
-	        userService.submitAccount(username, tablespace);
-	        return ResponseEntity.ok(
-	                "username " + username + " and tablespace " + tablespace + " chọn thành công.");
+	        String username = (String) data.get("username");
+	        String tablespace = (String) data.get("tablespace");
+	        int quota = (Integer) data.get("dataQuota");
+	        userService.submitAccount(username, tablespace, quota);
+	        return ResponseEntity.ok(Collections.singletonMap("message", "Quota đã được cài đặt thành công."));
 	    } catch (DataAccessException e) {
+	        Throwable rootCause = e.getMostSpecificCause();
+	        String errorMessage = rootCause != null ? rootCause.getMessage() : e.getMessage();
+	        return ResponseEntity
+	            .status(HttpStatus.BAD_REQUEST)
+	            .body(Collections.singletonMap("error", errorMessage));
+	    } catch (Exception e) {
 	        e.printStackTrace();
-	        System.err.println("Lỗi xảy ra: " + e.getMessage());
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi xảy ra: " + e.getMessage());
+	        return ResponseEntity
+	            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(Collections.singletonMap("error", "Lỗi server không xác định."));
 	    }
 	}
-
-
+	@GetMapping("/maxQuota")
+	public ResponseEntity<?> getMaxQuota(@RequestParam String tablespaceName) {
+	    try {
+	        int maxQuotaSize = userService.getTablespaceSize(tablespaceName);
+	        if(maxQuotaSize == -1) {
+	            return new ResponseEntity<>("Quota không tìm thấy cho tablespace này.", HttpStatus.NOT_FOUND);
+	        }
+	        return ResponseEntity.ok(maxQuotaSize);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return new ResponseEntity<>("Lỗi khi lấy thông tin max quota size.", HttpStatus.INTERNAL_SERVER_ERROR);
+	    }
+	}
 }
