@@ -12,6 +12,7 @@ import TablespaceManagement from './pages/TableSpacePage/TablespaceManagement';
 import SessionPage from './pages/SessionPage/SessionPage';
 import TablesManagement from './pages/TablesPage/TablesManagementPage';
 import ManageAuditPage from './pages/AuditPage/ManageAuditPage';
+import AddAuditPage from './pages/AuditPage/AddAuditPage';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -30,7 +31,8 @@ function App() {
           <Route path='/tableManage' element={<TablespaceManagement/>} />
           <Route path='/tablesManagement' element={<TablesManagement/>} />
           <Route path='/sessionManage' element={<SessionPage/>} />
-          <Route path='/auditMnage' element={<ManageAuditPage/>} />
+          <Route path='/auditManage' element={<ManageAuditPage/>} />
+          <Route path='/addAudit' element={<AddAuditPage/>} />
         </Routes>
       </BrowserRouter>
     </div>

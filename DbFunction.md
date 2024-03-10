@@ -474,3 +474,21 @@ EXCEPTION
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
 END Change_TBSpace_Unlock;
+
+---Hieu---
+create or replace FUNCTION ADD_FGA_POLICY (
+    p_object_schema IN VARCHAR2,
+    p_object_name IN VARCHAR2,
+    p_policy_name IN VARCHAR2,
+    p_type IN VARCHAR2
+) RETURN VARCHAR2 AS
+BEGIN
+    DBMS_FGA.add_policy(
+        object_schema   => p_object_schema,
+        object_name     => p_object_name,
+        policy_name     => p_policy_name,
+        statement_types => p_type
+    );
+
+    RETURN 'Policy added successfully';
+END ADD_FGA_POLICY;

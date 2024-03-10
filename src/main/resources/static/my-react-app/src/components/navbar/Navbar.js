@@ -72,7 +72,7 @@ const NavbarComponent = () => {
                                     Manage Tables
                                 </NavDropdown.Item>
                                 <NavDropdown.Item
-                                    onClick={() => navigate("/auditMnage")} >
+                                    onClick={() => navigate("/auditManage")} >
                                     Manage audits
                                 </NavDropdown.Item>
                                 <NavDropdown.Item href="#">Another Action</NavDropdown.Item>

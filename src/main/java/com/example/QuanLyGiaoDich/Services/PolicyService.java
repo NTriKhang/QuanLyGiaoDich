@@ -7,6 +7,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.aspectj.apache.bcel.classfile.StackMapType;
+import org.hibernate.boot.jaxb.hbm.internal.CacheAccessTypeConverter;
 import org.hibernate.dialect.OracleTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.CallableStatementCallback;
@@ -48,4 +50,43 @@ public class PolicyService {
             }
         );  
     }
+    
+    public String addFgaPolicy(String objectSchema, String objectName, String policyName, String statementType) {	
+    	return jdbcTemplate.execute(
+                conn -> {
+                	CallableStatement stmt = conn.prepareCall("{? = call ADD_FGA_POLICY(?,?,?,?) }");
+                	stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+    				stmt.setString(2, objectSchema);
+    				stmt.setString(3, objectName);
+    				stmt.setString(4, policyName);
+    				stmt.setString(5, statementType);
+                    return stmt;
+                },
+                (CallableStatementCallback<String>) stmt -> {
+                    stmt.execute();
+                   return stmt.getString(1);
+                }
+            );
+    }
+    
+    public List<String> getAllTable(String p_owner) {
+    	return jdbcTemplate.execute(
+    			conn -> {
+    				CallableStatement stmt = conn.prepareCall("{ ? = call GET_TABLES_BY_OWNER(?) }");
+    				stmt.registerOutParameter(1, OracleTypes.CURSOR);
+    				stmt.setString(2, p_owner);
+    				return stmt;
+    			},
+    			(CallableStatementCallback<List<String>>) stmt -> {
+    				stmt.execute();
+    				ResultSet rs = (ResultSet) stmt.getObject(1);
+    				List<String> listResult = new ArrayList<>();
+    				while(rs.next()) {
+    					listResult.add(rs.getString("TABLE_NAME"));
+    				}
+    				return listResult;
+    			}
+    	);
+    }
+    
 }

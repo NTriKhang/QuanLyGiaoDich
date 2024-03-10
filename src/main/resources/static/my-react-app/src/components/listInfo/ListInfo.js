@@ -10,7 +10,7 @@ const List = (props) => {
             ))}
         </thead>
         <tbody>
-            {listInfo.map((item) => (
+            {listInfo?.map((item) => (
             <tr key={item.id}>
                 {Object.values(item).map((value, index) => (
                     <td className="text-center" key={index}>{value == null ? "(NULL)" : value}</td>
