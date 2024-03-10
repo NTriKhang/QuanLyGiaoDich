@@ -548,3 +548,16 @@ BEGIN
 
     RETURN 'Policy added successfully';
 END ADD_FGA_POLICY;
+
+create or replace FUNCTION GET_TABLES_BY_OWNER(
+    p_owner IN VARCHAR2
+) RETURN SYS_REFCURSOR IS
+    v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+        SELECT table_name 
+        FROM all_tables 
+        WHERE owner = UPPER(p_owner);
+
+    RETURN v_cursor;
+END GET_TABLES_BY_OWNER;
