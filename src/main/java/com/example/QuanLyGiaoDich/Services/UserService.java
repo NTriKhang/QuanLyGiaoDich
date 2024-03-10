@@ -1,5 +1,6 @@
 package com.example.QuanLyGiaoDich.Services;
 
+import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -21,8 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.SqlOutParameter;
 import org.springframework.jdbc.core.SqlParameter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Service;
 
@@ -168,12 +171,23 @@ public class UserService {
 	    Map<String, Object> result = jdbcCall.execute();
 	    return (List<Users>) result.get("table_user");
 	}
-	public void submitAccount(String username, String tablespace) {
+	public List<String> getAllTablespaces() {
+        String sql = "SELECT tablespace_name FROM dba_tablespaces";
+        try {
+            return jdbcTemplate.queryForList(sql, String.class);
+        } catch (DataAccessException e) {
+            e.printStackTrace();
+            System.err.println("Lỗi xảy ra: " + e.getMessage());
+            return null;
+        }
+    }
+	public void submitAccount(String username, String tablespace, int quota) {
 		try {
 			jdbcTemplate.execute((Connection connection) -> {
-				CallableStatement cs = connection.prepareCall("{ call CHANGE_TBSPACE_UNLOCK(?, ?) }");
+				CallableStatement cs = connection.prepareCall("{ call CHANGE_TBSPACE_UNLOCK(?, ?, ?) }");
 				cs.setString(1, username);
 				cs.setString(2, tablespace);
+				cs.setInt(3, quota);
 				return cs;
 			}, (CallableStatement cs) -> {
 				cs.execute();
@@ -183,5 +197,20 @@ public class UserService {
 			e.printStackTrace();
 			System.err.println("Lỗi xảy ra: " + e.getMessage());
 		}	
+	}
+	public int getTablespaceSize(String tablespaceName) {
+	    SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+	        .withProcedureName("get_tablespace_size")
+	        .declareParameters(
+	            new SqlParameter("p_tablespace_name", Types.VARCHAR),
+	            new SqlOutParameter("p_tablespace_size", Types.NUMERIC)
+	        );
+
+	    SqlParameterSource inParams = new MapSqlParameterSource()
+	        .addValue("p_tablespace_name", tablespaceName);
+
+	    Map<String, Object> out = jdbcCall.execute(inParams);
+	    BigDecimal size = (BigDecimal) out.get("p_tablespace_size");
+	    return size != null ? size.intValue() : -1;
 	}
 }

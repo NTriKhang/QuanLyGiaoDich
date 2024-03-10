@@ -5,9 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.QuanLyGiaoDich.Services.AlertService;
 import com.example.QuanLyGiaoDich.Services.TransactionService;
 import com.example.QuanLyGiaoDich.dto.TransactionDto;
+import com.example.QuanLyGiaoDich.dto.TransactionResponseDto;
 import com.example.QuanLyGiaoDich.dto.UserLoginDto;
+import com.example.QuanLyGiaoDich.models.Alert;
 import com.example.QuanLyGiaoDich.models.Transaction;
 import com.example.QuanLyGiaoDich.repositories.TransactionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -44,21 +47,19 @@ public class TransactionController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    // Endpoint to create a new transaction
     @PostMapping
-    public ResponseEntity<TransactionDto> createTransaction(@RequestBody String transaction) throws ClassNotFoundException, SQLException, JsonProcessingException {
-    	try {
-    		ObjectMapper mapper = new ObjectMapper();
-        	TransactionDto createdTransaction = mapper.readValue(transaction, TransactionDto.class);
-        	boolean res = transactionService.add_transaction(createdTransaction);
-        	if(res == false)
-        		return new ResponseEntity<>(createdTransaction, HttpStatus.CONFLICT);
-            return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
-		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
-			return new ResponseEntity<TransactionDto>(HttpStatus.BAD_REQUEST);
-		}
+    public ResponseEntity<?> createTransaction(@RequestBody TransactionDto transactionDto) throws ClassNotFoundException, SQLException {
+        boolean transactionResult = transactionService.add_transaction(transactionDto);
+        TransactionResponseDto responseDto = new TransactionResponseDto();
+        if (transactionResult) {
+            responseDto.setTransaction(transactionDto); 
+            responseDto.setWarning(null); 
+            return new ResponseEntity<>(responseDto, HttpStatus.CREATED); 
+        } else {
+
+            responseDto.setWarning("Có lỗi xảy ra trong quá trình thực hiện giao dịch.");
+            return new ResponseEntity<>(responseDto, HttpStatus.CONFLICT);
+        }
     }
 
     // Endpoint to update an existing transaction

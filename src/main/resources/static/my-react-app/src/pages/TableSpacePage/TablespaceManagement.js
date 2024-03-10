@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './TablespaceManagement.css';
+import Navbar from "../../components/navbar/Navbar";
 
 const TablespaceManagement = () => {
 	const [username, setUsername] = useState('');
@@ -153,116 +154,119 @@ const TablespaceManagement = () => {
 		init();
 	}, [])
 	return (
-		<div id="container" style={{ margin: '50px 10%' }}>
-			<div className="form-group">
-				<select
-					id="username"
-					value={username}
-					onChange={e => setUsername(e.target.value)}
-				>
-					<option value="">Chọn người dùng</option>
-					{Array.isArray(users) && users.map(user => (
-						<option key={user} value={user}>{user}</option>
-					))}
-				</select>
-				<button className="search-button" onClick={searchTablespaces}>Tìm kiếm</button>
-			</div>
-
-			<h1>Tablespace Information</h1>
-			<table>
-				<thead>
-					<tr>
-						<th>File Name</th>
-						<th>Size (MB)</th>
-						<th>Tablespace Name</th>
-					</tr>
-				</thead>
-				<tbody>
-					{tablespaces.map((tablespace, index) => (
-						<tr key={index}>
-							<td>{tablespace.fileName}</td>
-							<td>{tablespace.size}</td>
-							<td>{tablespace.tablespaceName}</td>
-							<td>
-								<button onClick={() => deleteTablespace(tablespace.tablespaceName, tablespace.fileName)}>Xóa</button>
-
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
-			<div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '20px' }}>
-				<div id="create-tablespace-section" style={{ marginTop: '20px' }}>
-					<h2>Tạo Tablespace mới</h2>
-					<form>
-						<div className="form-group">
-							<label htmlFor="tablespaceNameInput">Tên Tablespace</label>
-							<input
-								type="text"
-								id="tablespaceNameInput"
-								placeholder="Tên Tablespace"
-								value={newTablespace.tablespaceName}
-								onChange={e => setNewTablespace({ ...newTablespace, tablespaceName: e.target.value })}
-							/>
-						</div>
-						<div className="form-group">
-							<label htmlFor="datafilePathInput">Đường dẫn Datafile</label>
-							<input
-								type="text"
-								id="datafilePathInput"
-								placeholder="Đường dẫn Datafile"
-								value={newTablespace.datafilePath}
-								onChange={e => setNewTablespace({ ...newTablespace, datafilePath: e.target.value })}
-							/>
-						</div>
-						<div className="form-group">
-							<label htmlFor="sizeInput">Kích thước (MB)</label>
-							<input
-								type="number"
-								id="sizeInput"
-								placeholder="Kích thước (MB)"
-								value={newTablespace.size}
-								onChange={e => setNewTablespace({ ...newTablespace, size: e.target.value })}
-							/>
-						</div>
-						<button type="button" onClick={createTablespace}>Tạo Tablespace</button>
-					</form>
+		<div>
+			<Navbar />
+			<div id="container" style={{ margin: '50px 10%' }}>
+				<div className="form-group">
+					<select
+						id="username"
+						value={username}
+						onChange={e => setUsername(e.target.value)}
+					>
+						<option value="">Chọn người dùng</option>
+						{Array.isArray(users) && users.map(user => (
+							<option key={user} value={user}>{user}</option>
+						))}
+					</select>
+					<button className="search-button" onClick={searchTablespaces}>Tìm kiếm</button>
 				</div>
-				<div id="add-datafile-section" style={{ marginTop: '20px' }}>
-					<h2>Bổ sung Datafile vào Tablespace</h2>
-					<form>
-						<div className="form-group">
-							<label htmlFor="existingTablespaceNameInput">Tên Tablespace hiện có</label>
-							<input
-								type="text"
-								id="existingTablespaceNameInput"
-								placeholder="Tên Tablespace hiện có"
-								value={newDatafile.existingTablespaceName}
-								onChange={e => setNewDatafile({ ...newDatafile, existingTablespaceName: e.target.value })}
-							/>
-						</div>
-						<div className="form-group">
-							<label htmlFor="newDatafilePathInput">Đường dẫn Datafile mới</label>
-							<input
-								type="text"
-								id="newDatafilePathInput"
-								placeholder="Đường dẫn Datafile mới"
-								value={newDatafile.newDatafilePath}
-								onChange={e => setNewDatafile({ ...newDatafile, newDatafilePath: e.target.value })}
-							/>
-						</div>
-						<div className="form-group">
-							<label htmlFor="newSizeInput">Kích thước mới (MB)</label>
-							<input
-								type="number"
-								id="newSizeInput"
-								placeholder="Kích thước mới (MB)"
-								value={newDatafile.newSize}
-								onChange={e => setNewDatafile({ ...newDatafile, newSize: e.target.value })}
-							/>
-						</div>
-						<button type="button" onClick={addDatafileToTablespace}>Bổ sung datafile</button>
-					</form>
+
+				<h1>Tablespace Information</h1>
+				<table>
+					<thead>
+						<tr>
+							<th>File Name</th>
+							<th>Size (MB)</th>
+							<th>Tablespace Name</th>
+						</tr>
+					</thead>
+					<tbody>
+						{tablespaces.map((tablespace, index) => (
+							<tr key={index}>
+								<td>{tablespace.fileName}</td>
+								<td>{tablespace.size}</td>
+								<td>{tablespace.tablespaceName}</td>
+								<td>
+									<button onClick={() => deleteTablespace(tablespace.tablespaceName, tablespace.fileName)}>Xóa</button>
+
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+				<div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '20px' }}>
+					<div id="create-tablespace-section" style={{ marginTop: '20px' }}>
+						<h2>Tạo Tablespace mới</h2>
+						<form>
+							<div className="form-group">
+								<label htmlFor="tablespaceNameInput">Tên Tablespace</label>
+								<input
+									type="text"
+									id="tablespaceNameInput"
+									placeholder="Tên Tablespace"
+									value={newTablespace.tablespaceName}
+									onChange={e => setNewTablespace({ ...newTablespace, tablespaceName: e.target.value })}
+								/>
+							</div>
+							<div className="form-group">
+								<label htmlFor="datafilePathInput">Đường dẫn Datafile</label>
+								<input
+									type="text"
+									id="datafilePathInput"
+									placeholder="Đường dẫn Datafile"
+									value={newTablespace.datafilePath}
+									onChange={e => setNewTablespace({ ...newTablespace, datafilePath: e.target.value })}
+								/>
+							</div>
+							<div className="form-group">
+								<label htmlFor="sizeInput">Kích thước (MB)</label>
+								<input
+									type="number"
+									id="sizeInput"
+									placeholder="Kích thước (MB)"
+									value={newTablespace.size}
+									onChange={e => setNewTablespace({ ...newTablespace, size: e.target.value })}
+								/>
+							</div>
+							<button type="button" onClick={createTablespace}>Tạo Tablespace</button>
+						</form>
+					</div>
+					<div id="add-datafile-section" style={{ marginTop: '20px' }}>
+						<h2>Bổ sung Datafile vào Tablespace</h2>
+						<form>
+							<div className="form-group">
+								<label htmlFor="existingTablespaceNameInput">Tên Tablespace hiện có</label>
+								<input
+									type="text"
+									id="existingTablespaceNameInput"
+									placeholder="Tên Tablespace hiện có"
+									value={newDatafile.existingTablespaceName}
+									onChange={e => setNewDatafile({ ...newDatafile, existingTablespaceName: e.target.value })}
+								/>
+							</div>
+							<div className="form-group">
+								<label htmlFor="newDatafilePathInput">Đường dẫn Datafile mới</label>
+								<input
+									type="text"
+									id="newDatafilePathInput"
+									placeholder="Đường dẫn Datafile mới"
+									value={newDatafile.newDatafilePath}
+									onChange={e => setNewDatafile({ ...newDatafile, newDatafilePath: e.target.value })}
+								/>
+							</div>
+							<div className="form-group">
+								<label htmlFor="newSizeInput">Kích thước mới (MB)</label>
+								<input
+									type="number"
+									id="newSizeInput"
+									placeholder="Kích thước mới (MB)"
+									value={newDatafile.newSize}
+									onChange={e => setNewDatafile({ ...newDatafile, newSize: e.target.value })}
+								/>
+							</div>
+							<button type="button" onClick={addDatafileToTablespace}>Bổ sung datafile</button>
+						</form>
+					</div>
 				</div>
 			</div>
 		</div>

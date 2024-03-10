@@ -26,7 +26,7 @@ public class TransactionService {
             CallableStatement callableStatement = connection.prepareCall("{call " + userSystemName + ".INSERT_TRANSACTION(?, ?, ?, ?)}");
 
             callableStatement.setString(1, transactionDto.userName.split(" ")[0]); 
-            callableStatement.setString(2, transactionDto.recipentUserName); 
+            callableStatement.setString(2, transactionDto.recipientUserName); 
             callableStatement.setString(3, "test"); 
             callableStatement.setDouble(4, transactionDto.amount); 
         
@@ -39,4 +39,10 @@ public class TransactionService {
         }
 		return true;
 	}
+	public boolean isAmountExceedLimit(Double amount) {
+	    final double LIMIT = 100000000;    
+	    return amount > LIMIT;
+	}
+
+
 }
