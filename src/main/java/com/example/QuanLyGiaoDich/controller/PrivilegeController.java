@@ -8,11 +8,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+
 
 import com.example.QuanLyGiaoDich.Services.PolicyService;
 import com.example.QuanLyGiaoDich.Services.PrivilegeService;
@@ -27,6 +29,9 @@ import com.example.QuanLyGiaoDich.dto.UserDetailAdminDto;
 import com.example.QuanLyGiaoDich.dto.UserInfoDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.example.QuanLyGiaoDich.dto.TablePrivilegeDto;
+import com.example.QuanLyGiaoDich.dto.UserPrivilegeDto;
+
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -96,5 +101,36 @@ public class PrivilegeController {
 	    Integer result = privilegeService.assignRoleToUser(assignRoleDto.RoleName, assignRoleDto.UserName);
 	    System.out.println(result);
 	    return new ResponseEntity<Integer>(result, HttpStatus.OK);
+  }
+	
+	@Autowired
+	private PrivilegeServices privilegeServices;
+	
+	@PostMapping("/grantTable")
+	public ResponseEntity<UserPrivilegeDto> grantPrivilegeToTable(@RequestBody String infoPrivilege) throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		UserPrivilegeDto privilege = mapper.readValue(infoPrivilege, UserPrivilegeDto.class);
+		int status = privilegeServices.grantPrivilegeToTable(privilege.p_username, privilege.p_table, privilege.p_privilege);
+		if(status == 1) {
+			return ResponseEntity.ok(privilege);
+		}
+		return ResponseEntity.badRequest().build();
+	}
+	
+	@PostMapping("/revokeTable")
+	public ResponseEntity<UserPrivilegeDto> revokePrivilegeToTable(@RequestBody String infoPrivilege) throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		UserPrivilegeDto privilege = mapper.readValue(infoPrivilege, UserPrivilegeDto.class);
+		int status = privilegeServices.revokePrivilegeToTable(privilege.p_username, privilege.p_table, privilege.p_privilege);
+		if(status == 1) {
+			return ResponseEntity.ok(privilege);
+		}
+		return ResponseEntity.badRequest().build();
+	}
+	
+	@GetMapping("/getUserPrivilege/{username}")
+	public ResponseEntity<List<TablePrivilegeDto>> getUserPrivilege(@PathVariable("username") String username) {
+		List<TablePrivilegeDto> listPrivilege = privilegeServices.getPrivilegeUser(username);
+		return ResponseEntity.ok(listPrivilege);
 	}
 }
