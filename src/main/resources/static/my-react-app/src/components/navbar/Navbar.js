@@ -68,7 +68,7 @@ const NavbarComponent = () => {
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="me-auto">
                             <Nav.Link onClick={() => navigate("/")}>Home</Nav.Link>
-                            <Nav.Link href="#link">Transfer</Nav.Link>
+                            <Nav.Link onClick={() => navigate("/transactionPage")}>Transfer</Nav.Link>
                             <NavDropdown title="Manage" id="basic-nav-dropdown">
                                 <NavDropdown.Item
                                     onClick={() => navigate("/manageDBPage")} >

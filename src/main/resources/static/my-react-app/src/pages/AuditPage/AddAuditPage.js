@@ -93,6 +93,26 @@ const AddAuditPage = (props) => {
     return (
         <div>
           <div>
+
+          <Navbar />
+          <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/addAudit")
+            }} >Create new</button>
+             <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/auditManage")
+            }} >Show audit</button>
+            
+             <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/auditWarning")
+            }} >Show warning</button>
+          <div className="container w-25 p-0">
+            <h2>Add Audit</h2>
             <div>
                 <div className="form-group mt-4">
                     <select

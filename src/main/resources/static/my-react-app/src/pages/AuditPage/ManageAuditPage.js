@@ -100,6 +100,7 @@ const ManageAuditPage = (props) => {
           <Navbar />
           <h2 style={{marginTop: 20, fontWeight: "bold"}}>Manage Audit</h2>
           <div className="container">
+
           <Flex align="flex-start" gap="small" vertical>
             <Dropdown.Button
                 menu={{
@@ -140,6 +141,26 @@ const ManageAuditPage = (props) => {
                     navigate("/auditTrial")
                 }} >AuditTrail
             </button> */}
+
+          <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/addAudit")
+            }} >Create new</button>
+             <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/auditManage")
+            }} >Show audit</button>
+            
+             <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/auditWarning")
+            }} >Show warning</button>
+            
+            
+
           <table>
                   <thead>
                       <tr>

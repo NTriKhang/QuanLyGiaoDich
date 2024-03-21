@@ -511,7 +511,6 @@ CREATE TABLE Alert (
     CreatedDate TIMESTAMP,
     UserName VARCHAR2(50)
 );
-
 CREATE SEQUENCE ALERT_SEQ
 START WITH 1
 INCREMENT BY 1
@@ -520,13 +519,18 @@ NOCYCLE;
 
 
 CREATE OR REPLACE PROCEDURE alert_high_value_transfer (
-    object_schema    VARCHAR2,
-    object_name      VARCHAR2,
-    policy_name      VARCHAR2)
+    object_schema  VARCHAR2,
+    object_name    VARCHAR2,
+    policy_name    VARCHAR2
+)
 IS
+    v_user_name VARCHAR2(50);
 BEGIN
-    INSERT INTO Alert (AlertID, Message, CreatedDate)
-    VALUES (ALERT_SEQ.NEXTVAL, 'Cảnh báo: Giao dịch vượt quá 100 triệu', SYSDATE);
+    v_user_name := SYS_CONTEXT('USERENV', 'SESSION_USER');
+
+    INSERT INTO Alert (AlertID, Message, CreatedDate, UserName)
+    VALUES (ALERT_SEQ.NEXTVAL, 'C?nh báo: Giao d?ch v??t quá 100 tri?u', SYSDATE, v_user_name);
+    
     COMMIT;
 END;
 /
@@ -774,5 +778,44 @@ BEGIN
     OPEN v_cursor FOR
     SELECT TABLE_NAME, PRIVILEGE FROM DBA_TAB_PRIVS WHERE GRANTEE = p_name;
     RETURN v_cursor;
+END;
+
+
+----kiet V4--------
+ALTER TABLE Alert ADD IsProcessed NUMBER(1) DEFAULT 0 NOT NULL;
+
+CREATE OR REPLACE PROCEDURE Get_User_Transactions(
+    p_UserName IN VARCHAR2,
+    o_Transactions OUT SYS_REFCURSOR
+)
+IS
+BEGIN
+    OPEN o_Transactions FOR
+        SELECT 
+            t.TransactionID,
+            u1.UserName AS UserNameGui,
+            u2.UserName AS UserNameNhan,
+            t.TransactionType,
+            t.Amount,
+            t.TransactionDate
+        FROM Transaction t
+        JOIN Users u1 ON t.SenderUserID = u1.UserID
+        JOIN Users u2 ON t.RecipientUserID = u2.UserID
+        WHERE u1.UserName = p_UserName OR u2.UserName = p_UserName;
+        ORDER BY t.TransactionDate DESC;
+END;
+
+create or replace PROCEDURE Get_User_Alerts (
+    p_username IN VARCHAR2,
+    out_cursor OUT SYS_REFCURSOR
+)
+IS
+BEGIN
+    OPEN out_cursor FOR
+        SELECT a.Message,
+               a.CreatedDate
+        FROM Alert a
+        WHERE a.UserName = p_username
+        ORDER BY a.CreatedDate DESC;
 END;
 

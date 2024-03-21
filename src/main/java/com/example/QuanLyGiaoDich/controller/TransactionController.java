@@ -6,7 +6,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.QuanLyGiaoDich.Services.AlertService;
+import com.example.QuanLyGiaoDich.Services.TablespaceService;
 import com.example.QuanLyGiaoDich.Services.TransactionService;
+import com.example.QuanLyGiaoDich.dto.InfoTransaction;
 import com.example.QuanLyGiaoDich.dto.TransactionDto;
 import com.example.QuanLyGiaoDich.dto.TransactionResponseDto;
 import com.example.QuanLyGiaoDich.dto.UserLoginDto;
@@ -16,6 +18,8 @@ import com.example.QuanLyGiaoDich.repositories.TransactionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.sql.SQLException;
 import java.util.List;
 
@@ -23,65 +27,81 @@ import java.util.List;
 @RequestMapping("/api/v1/transactions")
 public class TransactionController {
 
-    private final TransactionRepository transactionRepository;
-    private final TransactionService transactionService;
+	private final TransactionRepository transactionRepository;
+	private final TransactionService transactionService;
+	private final AlertService alertService;
 
-    @Autowired
-    public TransactionController(TransactionRepository transactionRepository, TransactionService transactionService) {
-        this.transactionRepository = transactionRepository;
-        this.transactionService = transactionService;
-    }
+	@Autowired
+	public TransactionController(TransactionRepository transactionRepository, TransactionService transactionService,
+			AlertService alertService) {
+		this.transactionRepository = transactionRepository;
+		this.transactionService = transactionService;
+		this.alertService = alertService;
+	}
 
-    // Endpoint to get all transactions
-    @GetMapping
-    public ResponseEntity<List<Transaction>> getAllTransactions() {
-        List<Transaction> transactions = transactionRepository.findAll();
-        return new ResponseEntity<>(transactions, HttpStatus.OK);
-    }
 
-    // Endpoint to get a transaction by ID
-    @GetMapping("/{transactionID}")
-    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long transactionID)  {
-        return transactionRepository.findById(transactionID)
-                .map(transaction -> new ResponseEntity<>(transaction, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
+	 // Endpoint to get all transactions	  
+	  @GetMapping
+	  public ResponseEntity<List<Transaction>> getAllTransactions() {
+		  List<Transaction> transactions = transactionRepository.findAll(); return new
+		  ResponseEntity<>(transactions, HttpStatus.OK); 
+	  }
 
-    @PostMapping
-    public ResponseEntity<?> createTransaction(@RequestBody TransactionDto transactionDto) throws ClassNotFoundException, SQLException {
-        boolean transactionResult = transactionService.add_transaction(transactionDto);
-        TransactionResponseDto responseDto = new TransactionResponseDto();
-        if (transactionResult) {
-            responseDto.setTransaction(transactionDto); 
-            responseDto.setWarning(null); 
-            return new ResponseEntity<>(responseDto, HttpStatus.CREATED); 
-        } else {
+	  @GetMapping("/user-transaction")
+	  public ResponseEntity<List<InfoTransaction>> getUserTransactions(@RequestParam("username") String username) {
+	      if (username == null || username.trim().isEmpty()) {
+	          return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+	      }
+	      List<InfoTransaction> transactions = transactionService.getUserTransactions(username);
+	      if (transactions.isEmpty()) {
+	          return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	      }
+	      return new ResponseEntity<>(transactions, HttpStatus.OK);
+	  }
 
-            responseDto.setWarning("Có lỗi xảy ra trong quá trình thực hiện giao dịch.");
-            return new ResponseEntity<>(responseDto, HttpStatus.CONFLICT);
-        }
-    }
 
-    // Endpoint to update an existing transaction
-    @PutMapping("/{transactionID}")
-    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long transactionID, @RequestBody Transaction transaction) {
-        if (transactionRepository.existsById(transactionID)) {
-            transaction.setTransactionID(transactionID); // Set the ID to ensure it's updated
-            Transaction updatedTransaction = transactionRepository.save(transaction);
-            return new ResponseEntity<>(updatedTransaction, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
+	// Endpoint to get a transaction by ID
+	@GetMapping("/{transactionID}")
+	public ResponseEntity<Transaction> getTransactionById(@PathVariable Long transactionID) {
+		return transactionRepository.findById(transactionID)
+				.map(transaction -> new ResponseEntity<>(transaction, HttpStatus.OK))
+				.orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+	}
 
-    // Endpoint to delete a transaction by ID
-    @DeleteMapping("/{transactionID}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable Long transactionID) {
-        if (transactionRepository.existsById(transactionID)) {
-            transactionRepository.deleteById(transactionID);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
+	@PostMapping
+	public ResponseEntity<?> createTransaction(@RequestBody TransactionDto transactionDto)
+			throws ClassNotFoundException, SQLException {
+		boolean transactionResult = transactionService.add_transaction(transactionDto);
+		String alertMessage = null;
+		if (transactionResult) {
+			Alert latestUnprocessedAlert = alertService.getLatestUnprocessedAlert();
+			alertMessage = latestUnprocessedAlert != null ? latestUnprocessedAlert.getMessage() : null;
+		}
+		TransactionResponseDto response = new TransactionResponseDto(transactionDto, alertMessage);
+		return ResponseEntity.ok(response);
+	}
+
+	// Endpoint to update an existing transaction
+	@PutMapping("/{transactionID}")
+	public ResponseEntity<Transaction> updateTransaction(@PathVariable Long transactionID,
+			@RequestBody Transaction transaction) {
+		if (transactionRepository.existsById(transactionID)) {
+			transaction.setTransactionID(transactionID); // Set the ID to ensure it's updated
+			Transaction updatedTransaction = transactionRepository.save(transaction);
+			return new ResponseEntity<>(updatedTransaction, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
+
+	// Endpoint to delete a transaction by ID
+	@DeleteMapping("/{transactionID}")
+	public ResponseEntity<Void> deleteTransaction(@PathVariable Long transactionID) {
+		if (transactionRepository.existsById(transactionID)) {
+			transactionRepository.deleteById(transactionID);
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		} else {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+	}
 }

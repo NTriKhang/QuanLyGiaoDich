@@ -8,6 +8,7 @@ const Home = (props) => {
 	const [money, setMoney] = useState('');
 	const [alertMessage, setAlertMessage] = useState('');
 	const navigate = useNavigate();
+	const [shouldFetchAlert, setShouldFetchAlert] = useState(false);
 
 	useEffect(() => {
 		if (!localStorage.getItem('userNameKey')) {
@@ -15,30 +16,50 @@ const Home = (props) => {
 		}
 	}, [navigate]);
 
-	const fetchLatestAlert = () => {
-		fetch('http://localhost:8080/api/v1/alerts/latest')
-			.then(response => response.json())
-			.then(data => {
-				if (data.message) {
-					setAlertMessage(data.message);
-				}
-			})
-			.catch(error => {
-				console.error("Error:", error);
-			});
+	useEffect(() => {
+		if (shouldFetchAlert) {
+			fetchLatestAlert();
+			setShouldFetchAlert(false); 
+		}
+	}, [shouldFetchAlert]);
+	const fetchLatestAlert = async () => {
+		try {
+			const response = await fetch('http://localhost:8080/api/v1/alerts/latest-unprocessed');
+			if (!response.ok) throw new Error('Failed to fetch latest alert.');
+
+			const alertData = await response.json();
+			if (alertData && alertData.message) {
+				setAlertMessage(alertData.message);
+				await markAlertAsProcessed(alertData.alertID);
+			}
+		} catch (error) {
+			console.error("Error:", error);
+		}
 	};
 
-        
+	const markAlertAsProcessed = async (alertID) => {
+		if (!alertID) return;
+
+		try {
+			await fetch(`http://localhost:8080/api/v1/alerts/mark-processed/${alertID}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			});
+		} catch (error) {
+			console.error("Error marking alert as processed:", error);
+		}
+	};
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-
 		const transaction = {
 			userName: localStorage.getItem('userNameKey'),
 			recipientUserName: userRecipientName,
 			amount: parseFloat(money),
 		};
-
+		
 		try {
 			const response = await fetch('http://localhost:8080/api/v1/transactions', {
 				method: 'POST',
@@ -47,34 +68,34 @@ const Home = (props) => {
 				},
 				body: JSON.stringify(transaction),
 			});
-
+		
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message || 'Failed to transfer.');
+			}
+		
 			const data = await response.json();
-
-			if (response.ok) {
-				if (data.warning) {
-					alert(data.warning);
-					setAlertMessage(data.warning);
-				} else {
-					alert('Transfer successful');
-					setAlertMessage('');
-				}
+			if (data.warning) {
+				window.alert(data.warning);
+				setShouldFetchAlert(true);
 			} else {
-				alert(data.message || 'Failed to transfer.');
+				window.alert('Transfer successful');
 			}
 		} catch (error) {
+			window.alert(error.message);
 			console.error('Error:', error);
-			alert('An error occurred while processing the transaction');
+		} finally {
+			setUsername('');
+			setMoney('');
+			setShouldFetchAlert(false);
+			setAlertMessage('');
 		}
-		setUsername('');
-		setMoney('');
 	};
-
-
-
+	
+	
 	return (
 		<div>
 			<Navbar />
-			{alertMessage && <div className="alert">{alertMessage}</div>}
 			<h2>Transaction Form</h2>
 			<form onSubmit={handleSubmit} className="center_form">
 				<div>
