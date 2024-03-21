@@ -30,10 +30,23 @@ const ManageAuditPage = (props) => {
           <Navbar />
           <div className="container">
           <button 
-            className="btn btn-primary"
+            className="btn btn-primary me-2"
             onClick={() => {
                 navigate("/addAudit")
             }} >Create new</button>
+             <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/auditManage")
+            }} >Show audit</button>
+            
+             <button 
+            className="btn btn-primary me-2"
+            onClick={() => {
+                navigate("/auditWarning")
+            }} >Show warning</button>
+            
+            
           <table>
                   <thead>
                       <tr>

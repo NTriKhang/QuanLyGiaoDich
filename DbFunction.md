@@ -494,14 +494,15 @@ END;
 -------thiet lap canh bao 
 BEGIN
     DBMS_FGA.ADD_POLICY(
-        object_schema      => 'test', 
-        object_name        => 'Transaction', 
-        policy_name        => 'high_value_transfer_audit',
-        audit_column       => 'Amount', 
-        audit_condition    => 'Amount > 100000000 AND TransactionType = ''Transfer'' AND TransactionDate >= TRUNC(SYSDATE)',
-        handler_schema     => 'test', 
-        handler_module     => 'alert_high_value_transfer',
-        enable             => TRUE
+        object_schema   => 'TEST',
+        object_name     => 'TRANSACTION',
+        policy_name     => 'HIGH_VALUE_TRANSFER_AUDIT',
+        audit_condition => 'AMOUNT > 100000000',
+        audit_column    => 'AMOUNT',
+        handler_schema  => 'TEST',
+        handler_module  => 'ALERT_HIGH_VALUE_TRANSFER',
+        statement_types => 'INSERT, SELECT',
+        enable          => TRUE
     );
 END;
 /
@@ -509,9 +510,9 @@ END;
 CREATE TABLE Alert (
     AlertID NUMBER PRIMARY KEY,
     Message VARCHAR2(255),
-    CreatedDate TIMESTAMP
+    CreatedDate TIMESTAMP,
+    UserName VARCHAR2(50)
 );
-
 CREATE SEQUENCE ALERT_SEQ
 START WITH 1
 INCREMENT BY 1
@@ -520,13 +521,18 @@ NOCYCLE;
 
 
 CREATE OR REPLACE PROCEDURE alert_high_value_transfer (
-    object_schema    VARCHAR2,
-    object_name      VARCHAR2,
-    policy_name      VARCHAR2)
+    object_schema  VARCHAR2,
+    object_name    VARCHAR2,
+    policy_name    VARCHAR2
+)
 IS
+    v_user_name VARCHAR2(50);
 BEGIN
-    INSERT INTO Alert (AlertID, Message, CreatedDate)
-    VALUES (ALERT_SEQ.NEXTVAL, 'Cảnh báo: Giao dịch vượt quá 100 triệu', SYSDATE);
+    v_user_name := SYS_CONTEXT('USERENV', 'SESSION_USER');
+
+    INSERT INTO Alert (AlertID, Message, CreatedDate, UserName)
+    VALUES (ALERT_SEQ.NEXTVAL, 'C?nh báo: Giao d?ch v??t quá 100 tri?u', SYSDATE, v_user_name);
+    
     COMMIT;
 END;
 /
@@ -561,3 +567,46 @@ BEGIN
 
     RETURN v_cursor;
 END GET_TABLES_BY_OWNER;
+----kiet V4--------
+ALTER TABLE Alert ADD IsProcessed NUMBER(1) DEFAULT 0 NOT NULL;
+
+CREATE OR REPLACE PROCEDURE Get_User_Transactions(
+    p_UserName IN VARCHAR2,
+    o_Transactions OUT SYS_REFCURSOR
+)
+IS
+BEGIN
+    OPEN o_Transactions FOR
+        SELECT 
+            t.TransactionID,
+            u1.UserName AS UserNameGui,
+            u2.UserName AS UserNameNhan,
+            t.TransactionType,
+            t.Amount,
+            t.TransactionDate
+        FROM Transaction t
+        JOIN Users u1 ON t.SenderUserID = u1.UserID
+        JOIN Users u2 ON t.RecipientUserID = u2.UserID
+        WHERE u1.UserName = p_UserName OR u2.UserName = p_UserName;
+        ORDER BY t.TransactionDate DESC;
+END;
+
+CREATE OR REPLACE PROCEDURE Get_User_Alerts (
+    p_username IN VARCHAR2,
+    out_cursor OUT SYS_REFCURSOR
+)
+IS
+BEGIN
+    OPEN out_cursor FOR
+        SELECT a.Message,
+               a.CreatedDate,
+               u2.UserName AS RecipientUserName,
+               t.Amount
+        FROM Alert a
+        INNER JOIN Users u ON a.UserName = u.UserName
+        INNER JOIN Transaction t ON u.UserID = t.SenderUserID
+        INNER JOIN Users u2 ON t.RecipientUserID = u2.UserID
+        WHERE a.UserName = p_username AND Amount > 100000000
+        ORDER BY a.CreatedDate DESC;
+END;
+/

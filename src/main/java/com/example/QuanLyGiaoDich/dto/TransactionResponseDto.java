@@ -2,7 +2,7 @@ package com.example.QuanLyGiaoDich.dto;
 
 public class TransactionResponseDto {
     private TransactionDto transaction;
-    private String warning;
+    private String warning = null;
 
     public TransactionResponseDto(TransactionDto transaction, String warning) {
         this.transaction = transaction;
