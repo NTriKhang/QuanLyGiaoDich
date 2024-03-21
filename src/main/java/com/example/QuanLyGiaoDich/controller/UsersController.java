@@ -54,7 +54,7 @@ public class UsersController {
 	}
 
 	@GetMapping("/listUser")
-	public List<UserListDto> getListUser(){
+	public  List<UserListDto> getListUser(){
 		try {
 			return userService.getListUser();
 		}

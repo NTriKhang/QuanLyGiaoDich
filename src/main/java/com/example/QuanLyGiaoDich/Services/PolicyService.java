@@ -7,15 +7,21 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.apache.naming.java.javaURLContextFactory;
 import org.aspectj.apache.bcel.classfile.StackMapType;
 import org.hibernate.boot.jaxb.hbm.internal.CacheAccessTypeConverter;
 import org.hibernate.dialect.OracleTypes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.type.filter.AbstractClassTestingTypeFilter;
 import org.springframework.jdbc.core.CallableStatementCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import com.example.QuanLyGiaoDich.dto.AddProfileDto;
 import com.example.QuanLyGiaoDich.dto.AuditPolicyDto;
+import com.example.QuanLyGiaoDich.dto.AuditTrialDto;
+import com.example.QuanLyGiaoDich.dto.ProfileDto;
+import com.fasterxml.jackson.core.TSFBuilder;
 
 @Service
 public class PolicyService {
@@ -87,6 +93,90 @@ public class PolicyService {
     				return listResult;
     			}
     	);
+    }
+    
+    public List<AuditTrialDto> getAuditTrail() {
+    	return jdbcTemplate.execute(
+    			conn -> {
+    				CallableStatement stmt = conn.prepareCall("{ ? = call GET_AUDIT_TRIAL() }");
+    				stmt.registerOutParameter(1, OracleTypes.CURSOR);
+    				return stmt;
+    			},
+    			(CallableStatementCallback<List<AuditTrialDto>>) stmt -> {
+    				stmt.execute();
+    				ResultSet rs = (ResultSet) stmt.getObject(1);
+    				List<AuditTrialDto> listResult = new ArrayList<>();
+    				while(rs.next()) {
+    					AuditTrialDto data = new AuditTrialDto();
+    					data.SESSION_ID = rs.getString("SESSION_ID");
+    					data.TIMESTAMP = rs.getString("TIMESTAMP");
+    					data.DB_USER = rs.getString("DB_USER");
+    					data.OBJECT_SCHEMA = rs.getString("OBJECT_SCHEMA");
+    					data.OBJECT_NAME = rs.getString("OBJECT_NAME");
+    					data.SQL_TEXT = rs.getString("SQL_TEXT");
+    					
+    					listResult.add(data);
+    				}
+    				return listResult;
+    			}
+    		);
+    }
+    
+    public List<ProfileDto> getProfiles() {
+    	return jdbcTemplate.execute(
+    			conn -> {
+    				CallableStatement stmt = conn.prepareCall("{ ? = call get_profiles() }");
+    				stmt.registerOutParameter(1, OracleTypes.CURSOR);
+    				return stmt;
+    			},
+    			(CallableStatementCallback<List<ProfileDto>>) stmt -> {
+    				stmt.execute();
+    				ResultSet rs = (ResultSet) stmt.getObject(1);
+    				List<ProfileDto> listResult = new ArrayList<>();
+    				while(rs.next()) {
+    					ProfileDto data = new ProfileDto();
+    					data.PROFILE = rs.getString("PROFILE");
+    					data.RESOURCE_NAME = rs.getString("RESOURCE_NAME");
+    					data.LIMIT = rs.getString("LIMIT");
+    					
+    					listResult.add(data);
+    				}
+    				return listResult;
+    			}
+    		);
+    }
+    
+    public int addProfile(String profileName, int sessionPerUser, int idleTime, int connectTime) {	
+    	return jdbcTemplate.execute(
+                conn -> {
+                	CallableStatement stmt = conn.prepareCall("{? = call add_profile(?,?,?,?) }");
+                	stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+    				stmt.setString(2, profileName);
+    				stmt.setInt(3, sessionPerUser);
+    				stmt.setInt(4, idleTime);
+    				stmt.setInt(5, connectTime);
+                    return stmt;
+                },
+                (CallableStatementCallback<Integer>) stmt -> {
+                    stmt.execute();
+                   return stmt.getInt(1);
+                }
+            );
+    }
+    public int alterProfile(String profile, String username) {
+    	return jdbcTemplate.execute(
+    			conn -> {
+    				CallableStatement stmt = conn.prepareCall("{ ? = call assign_profile(?,?) }");
+    				stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+    				stmt.setString(2, profile);
+    				stmt.setString(3, username);
+    				return stmt;
+    			},
+    			(CallableStatementCallback<Integer>) stmt -> {
+    				stmt.execute();
+    				return stmt.getInt(1);
+    			}
+    		);
     }
     
 }

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../../components/navbar/Navbar";
 import UserInfo from "../../components/userinfo/UserInfo";
 
+
 const UserDetailAdminPage = (props) => {
     const [detaiUser, setDetailUser] = useState([]);
     

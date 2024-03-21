@@ -462,18 +462,16 @@ END;
 
 ------kiet
 
-CREATE OR REPLACE PROCEDURE Change_TBSpace_Unlock(
+create or replace PROCEDURE Change_TBSpace_Unlock(
     p_user_name IN VARCHAR2,
-    p_new_tablespace IN VARCHAR2
+    p_new_tablespace IN VARCHAR2,
+    p_quota IN NUMBER
 ) AS
 BEGIN
+    EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' QUOTA ' || TO_CHAR(p_quota) || 'M ON ' || p_new_tablespace;
     EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' DEFAULT TABLESPACE ' || p_new_tablespace;
     EXECUTE IMMEDIATE 'ALTER USER ' || p_user_name || ' ACCOUNT UNLOCK';
-    DBMS_OUTPUT.PUT_LINE('User ' || p_user_name || ' has been modified and unlocked successfully.');
-EXCEPTION
-    WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
-END Change_TBSpace_Unlock;
+END;
 
 -----set quota
 
@@ -494,12 +492,12 @@ END;
 -------thiet lap canh bao 
 BEGIN
     DBMS_FGA.ADD_POLICY(
-        object_schema   => 'TEST',
+        object_schema   => 'KHANG3',
         object_name     => 'TRANSACTION',
         policy_name     => 'HIGH_VALUE_TRANSFER_AUDIT',
         audit_condition => 'AMOUNT > 100000000',
         audit_column    => 'AMOUNT',
-        handler_schema  => 'TEST',
+        handler_schema  => 'KHANG3',
         handler_module  => 'ALERT_HIGH_VALUE_TRANSFER',
         statement_types => 'INSERT, SELECT',
         enable          => TRUE
@@ -540,7 +538,7 @@ END;
 ---Hieu---
 create or replace FUNCTION ADD_FGA_POLICY (
     p_object_schema IN VARCHAR2,
-    p_object_name IN VARCHAR2,
+    p_object_name IN VARCHAR2,npo
     p_policy_name IN VARCHAR2,
     p_type IN VARCHAR2
 ) RETURN VARCHAR2 AS
@@ -567,6 +565,222 @@ BEGIN
 
     RETURN v_cursor;
 END GET_TABLES_BY_OWNER;
+
+------------------------V4
+---------Khang
+CREATE OR REPLACE FUNCTION get_table_columns(table_name IN VARCHAR2)
+RETURN SYS_REFCURSOR
+IS
+    v_cursor SYS_REFCURSOR;
+    v_column_name varchar2(128);
+    v_table varchar2(128);
+BEGIN
+    v_table := upper(table_name);
+    OPEN v_cursor FOR
+        SELECT COLUMN_NAME
+        FROM ALL_TAB_COLUMNS
+        WHERE TABLE_NAME = v_table;
+    RETURN v_cursor;
+END get_table_columns;
+/
+-----------------------
+CREATE OR REPLACE PROCEDURE create_group_privilege(
+    p_role_name IN VARCHAR2,
+    p_execute_cmds IN VARCHAR2, 
+    p_table_names IN VARCHAR2 
+)
+IS
+    role_exists INTEGER;
+BEGIN
+    -- Check if the role already exists
+    SELECT COUNT(*)
+    INTO role_exists
+    FROM dba_roles
+    WHERE role = upper(p_role_name);
+
+    IF role_exists = 0 THEN
+        EXECUTE IMMEDIATE 'CREATE ROLE ' || upper(p_role_name);
+    END IF;
+
+    EXECUTE IMMEDIATE 'GRANT ' || p_execute_cmds || ' ON ' || p_table_names || ' TO ' || upper(p_role_name);
+END create_group_privilege;
+/
+
+/
+desc dba_roles
+/
+BEGIN
+    create_group_privilege('your_role_name', 'Delete', 'BENEFICIARY');
+END;
+select * from dba_roles;
+
+CREATE OR REPLACE FUNCTION role_exists(p_role_name IN VARCHAR2)
+RETURN INTEGER
+IS
+    role_count INTEGER;
+BEGIN
+    -- Check if the role exists
+    SELECT COUNT(*)
+    INTO role_count
+    FROM dba_roles
+    WHERE role = upper(p_role_name);
+
+    -- Return true if role exists, false otherwise
+    IF role_count > 0 then
+        return 1;
+    else
+        return 0;
+    end if;
+END role_exists;
+/
+CREATE OR REPLACE FUNCTION get_all_roles RETURN SYS_REFCURSOR
+IS
+    cur SYS_REFCURSOR;
+BEGIN
+    OPEN cur FOR
+        SELECT role, oracle_maintained
+        FROM dba_roles;
+
+    RETURN cur;
+END get_all_roles;
+/
+CREATE OR REPLACE FUNCTION get_role_privileges(role_name IN VARCHAR2)
+  RETURN SYS_REFCURSOR
+IS
+  cur SYS_REFCURSOR;
+BEGIN
+  OPEN cur FOR
+    SELECT TABLE_NAME, PRIVILEGE
+    FROM DBA_TAB_PRIVS
+    WHERE GRANTEE = upper(role_name);
+  RETURN cur;
+END;
+/
+CREATE OR REPLACE FUNCTION get_users_assigned_to_role(role_name IN VARCHAR2)
+  RETURN SYS_REFCURSOR
+IS
+  cur SYS_REFCURSOR;
+BEGIN
+  OPEN cur FOR
+    SELECT GRANTEE
+    FROM DBA_ROLE_PRIVS
+    WHERE GRANTED_ROLE = upper(role_name);
+  RETURN cur;
+END;
+/
+CREATE OR REPLACE PROCEDURE assign_role_to_user(
+    p_role_name IN VARCHAR2,
+    p_username  IN VARCHAR2
+)
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'GRANT ' || upper(p_role_name) || ' TO ' || upper(p_username);
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END assign_role_to_user;
+/
+----Hieu----
+create or replace FUNCTION get_audit_trial
+RETURN SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT
+        SESSION_ID,
+        TO_CHAR(TIMESTAMP, 'DD-MM-YYYY HH24:MI:SS') AS TIMESTAMP,
+        DB_USER,
+        OBJECT_SCHEMA,
+        OBJECT_NAME,
+        SQL_TEXT
+    FROM dba_fga_audit_trail;
+    RETURN v_cursor;
+END;
+
+CREATE OR REPLACE FUNCTION get_profiles
+RETURN SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT PROFILE, RESOURCE_NAME, LIMIT
+    FROM dba_profiles;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION add_profile (
+    p_profile_name IN VARCHAR2,
+    p_session_per_user IN NUMBER,
+    p_idle_time IN NUMBER,
+    p_connect_time IN NUMBER
+) RETURN NUMBER
+IS
+    profile_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO profile_count
+    FROM dba_profiles
+    WHERE UPPER(PROFILE) = p_profile_name;
+    
+    IF profile_count > 0 THEN
+        RETURN 0;
+    ELSE
+        EXECUTE IMMEDIATE 'CREATE PROFILE ' || p_profile_name ||
+        ' LIMIT SESSIONS_PER_USER ' || p_session_per_user || 
+        ' IDLE_TIME ' || p_idle_time ||
+        ' CONNECT_TIME ' || p_connect_time;
+        RETURN 1;
+    END IF;
+END;
+
+create or replace FUNCTION assign_profile(
+    p_profile VARCHAR2,
+    P_user_name VARCHAR2
+)
+RETURN NUMBER
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER USER ' || P_user_name || 
+    ' PROFILE ' || p_profile;
+    RETURN 1;
+END;
+
+CREATE OR REPLACE FUNCTION grant_privilege(
+    p_username VARCHAR2,
+    p_table VARCHAR2,
+    p_privilege VARCHAR2
+) RETURN NUMBER AS
+BEGIN
+    EXECUTE IMMEDIATE 'GRANT ' || p_privilege || 
+    ' ON ' || p_table || ' TO ' || p_username;
+    RETURN 1;
+END;
+
+create or replace FUNCTION revoke_privilege(
+    p_username VARCHAR2,
+    p_table VARCHAR2,
+    p_privilege VARCHAR2
+) RETURN NUMBER AS
+BEGIN
+    EXECUTE IMMEDIATE 'REVOKE ' || p_privilege || 
+    ' ON ' || p_table || ' FROM ' || p_username;   
+    RETURN 1;
+END;
+
+create or replace FUNCTION get_privilege_user(
+    p_name VARCHAR2
+)
+RETURN SYS_REFCURSOR
+IS
+    v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT TABLE_NAME, PRIVILEGE FROM DBA_TAB_PRIVS WHERE GRANTEE = p_name;
+    RETURN v_cursor;
+END;
+
+
 ----kiet V4--------
 ALTER TABLE Alert ADD IsProcessed NUMBER(1) DEFAULT 0 NOT NULL;
 
@@ -591,7 +805,7 @@ BEGIN
         ORDER BY t.TransactionDate DESC;
 END;
 
-CREATE OR REPLACE PROCEDURE Get_User_Alerts (
+create or replace PROCEDURE Get_User_Alerts (
     p_username IN VARCHAR2,
     out_cursor OUT SYS_REFCURSOR
 )
@@ -599,14 +813,9 @@ IS
 BEGIN
     OPEN out_cursor FOR
         SELECT a.Message,
-               a.CreatedDate,
-               u2.UserName AS RecipientUserName,
-               t.Amount
+               a.CreatedDate
         FROM Alert a
-        INNER JOIN Users u ON a.UserName = u.UserName
-        INNER JOIN Transaction t ON u.UserID = t.SenderUserID
-        INNER JOIN Users u2 ON t.RecipientUserID = u2.UserID
-        WHERE a.UserName = p_username AND Amount > 100000000
+        WHERE a.UserName = p_username
         ORDER BY a.CreatedDate DESC;
 END;
-/
+

@@ -14,7 +14,14 @@ import SessionPage from './pages/SessionPage/SessionPage';
 import TablesManagement from './pages/TablesPage/TablesManagementPage';
 import ManageAuditPage from './pages/AuditPage/ManageAuditPage';
 import AddAuditPage from './pages/AuditPage/AddAuditPage';
+
+import RolePage from './pages/RolePage/RolePage';
+import AddRolePage from './pages/RolePage/AddRolePage';
+import AuditTrial from './pages/AuditPage/AuditTrial';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+
 import AuditWarning from './pages/AuditPage/AuditWarning';
+
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -36,7 +43,12 @@ function App() {
           <Route path='/sessionManage' element={<SessionPage/>} />
           <Route path='/auditManage' element={<ManageAuditPage/>} />
           <Route path='/addAudit' element={<AddAuditPage/>} />
+          <Route path='/roleManage' element={<RolePage/>} />
+          <Route path='/addRole' element={<AddRolePage/>} />
+          <Route path='/auditTrial' element={<AuditTrial/>} />
+          <Route path='/profilePage' element={<ProfilePage/>} />
           <Route path='/auditWarning' element={<AuditWarning/>} />
+
         </Routes>
       </BrowserRouter>
     </div>

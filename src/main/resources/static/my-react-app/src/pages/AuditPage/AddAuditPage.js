@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 
+import { Button, Form, Input, Modal } from 'antd';
+
 const AddAuditPage = (props) => {
     const dataFetchedRef = React.useRef(false);
     const [tableName, setTableName] = useState([]);
@@ -90,6 +92,8 @@ const AddAuditPage = (props) => {
     
     return (
         <div>
+          <div>
+
           <Navbar />
           <button 
             className="btn btn-primary me-2"
@@ -124,12 +128,28 @@ const AddAuditPage = (props) => {
                 </div>
             </div>
             <div>
-                <input
+            <Form.Item
+              name="title"
+              label="Policy Name"
+              rules={[
+                {
+                  required: true,
+                  message: 'Please input the title of collection!',
+                },
+              ]}
+            >
+            <Input
+                value={policyName}
+                placeholder="Policy Name"
+                onChange={ev => setPolicyName(ev.target.value)}
+                type="text" />
+            </Form.Item>
+                {/* <input
                     value={policyName}
                     placeholder="Policy Name"
                     onChange={ev => setPolicyName(ev.target.value)}
                     className={"inputBox form-control pt-4 pb-4"}
-                    type="text" />
+                    type="text" /> */}
             </div>
             <div>
             <div className="form-check" style={{flexDirection: 'row', display: 'flex', marginTop: '18px'}}>
@@ -188,8 +208,9 @@ const AddAuditPage = (props) => {
                 className="btn btn-primary w-100"
                 onClick={() => {
                     addAudit(objectName, policyName, statementType);
+                    navigate("/auditManage");
                 }}    >
-                    Save
+                    Add
             </button>
           </div>
           </div>
