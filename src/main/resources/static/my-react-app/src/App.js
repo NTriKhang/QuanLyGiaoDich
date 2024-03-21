@@ -13,6 +13,8 @@ import SessionPage from './pages/SessionPage/SessionPage';
 import TablesManagement from './pages/TablesPage/TablesManagementPage';
 import ManageAuditPage from './pages/AuditPage/ManageAuditPage';
 import AddAuditPage from './pages/AuditPage/AddAuditPage';
+import AuditTrial from './pages/AuditPage/AuditTrial';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -33,6 +35,8 @@ function App() {
           <Route path='/sessionManage' element={<SessionPage/>} />
           <Route path='/auditManage' element={<ManageAuditPage/>} />
           <Route path='/addAudit' element={<AddAuditPage/>} />
+          <Route path='/auditTrial' element={<AuditTrial/>} />
+          <Route path='/profilePage' element={<ProfilePage/>} />
         </Routes>
       </BrowserRouter>
     </div>

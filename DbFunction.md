@@ -561,3 +561,104 @@ BEGIN
 
     RETURN v_cursor;
 END GET_TABLES_BY_OWNER;
+
+---v4----
+----Hieu----
+create or replace FUNCTION get_audit_trial
+RETURN SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT
+        SESSION_ID,
+        TO_CHAR(TIMESTAMP, 'DD-MM-YYYY HH24:MI:SS') AS TIMESTAMP,
+        DB_USER,
+        OBJECT_SCHEMA,
+        OBJECT_NAME,
+        SQL_TEXT
+    FROM dba_fga_audit_trail;
+    RETURN v_cursor;
+END;
+
+CREATE OR REPLACE FUNCTION get_profiles
+RETURN SYS_REFCURSOR
+IS
+v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT PROFILE, RESOURCE_NAME, LIMIT
+    FROM dba_profiles;
+    RETURN v_cursor;
+END;
+
+create or replace FUNCTION add_profile (
+    p_profile_name IN VARCHAR2,
+    p_session_per_user IN NUMBER,
+    p_idle_time IN NUMBER,
+    p_connect_time IN NUMBER
+) RETURN NUMBER
+IS
+    profile_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO profile_count
+    FROM dba_profiles
+    WHERE UPPER(PROFILE) = p_profile_name;
+    
+    IF profile_count > 0 THEN
+        RETURN 0;
+    ELSE
+        EXECUTE IMMEDIATE 'CREATE PROFILE ' || p_profile_name ||
+        ' LIMIT SESSIONS_PER_USER ' || p_session_per_user || 
+        ' IDLE_TIME ' || p_idle_time ||
+        ' CONNECT_TIME ' || p_connect_time;
+        RETURN 1;
+    END IF;
+END;
+
+create or replace FUNCTION assign_profile(
+    p_profile VARCHAR2,
+    P_user_name VARCHAR2
+)
+RETURN NUMBER
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER USER ' || P_user_name || 
+    ' PROFILE ' || p_profile;
+    RETURN 1;
+END;
+
+CREATE OR REPLACE FUNCTION grant_privilege(
+    p_username VARCHAR2,
+    p_table VARCHAR2,
+    p_privilege VARCHAR2
+) RETURN NUMBER AS
+BEGIN
+    EXECUTE IMMEDIATE 'GRANT ' || p_privilege || 
+    ' ON ' || p_table || ' TO ' || p_username;
+    RETURN 1;
+END;
+
+create or replace FUNCTION revoke_privilege(
+    p_username VARCHAR2,
+    p_table VARCHAR2,
+    p_privilege VARCHAR2
+) RETURN NUMBER AS
+BEGIN
+    EXECUTE IMMEDIATE 'REVOKE ' || p_privilege || 
+    ' ON ' || p_table || ' FROM ' || p_username;   
+    RETURN 1;
+END;
+
+create or replace FUNCTION get_privilege_user(
+    p_name VARCHAR2
+)
+RETURN SYS_REFCURSOR
+IS
+    v_cursor SYS_REFCURSOR;
+BEGIN
+    OPEN v_cursor FOR
+    SELECT TABLE_NAME, PRIVILEGE FROM DBA_TAB_PRIVS WHERE GRANTEE = p_name;
+    RETURN v_cursor;
+END;

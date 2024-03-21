@@ -60,28 +60,28 @@ const ManageUsersPage = () => {
         <Navbar />
         <div className="container">
         <table>
-                <thead>
-                    <tr>
-                        <th>USER_ID</th>
-                        <th>USERNAME</th>
-                        <th>ACCOUNT_STATUS</th>
-                        <th>PROFILE</th>
-                        <th></th>
+            <thead>
+                <tr>
+                    <th>USER_ID</th>
+                    <th>USERNAME</th>
+                    <th>ACCOUNT_STATUS</th>
+                    <th>PROFILE</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {listInfo.map((user, index) => (
+                    <tr key={index}>
+                        <td className="text-center">{user.USER_ID}</td>
+                        <td className="text-center">{user.USERNAME}</td>
+                        <td className="text-center">{user.ACCOUNT_STATUS}</td>
+                        <td className="text-center">
+                            <button className="btn btn-primary" onClick={() => showDetailUser(user.USER_ID)}>Info</button>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    {listInfo.map((user, index) => (
-                        <tr key={index}>
-                            <td className="text-center">{user.USER_ID}</td>
-                            <td className="text-center">{user.USERNAME}</td>
-                            <td className="text-center">{user.ACCOUNT_STATUS}</td>
-                            <td className="text-center">
-                                <button className="btn btn-primary" onClick={() => showDetailUser(user.USER_ID)}>Info</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                ))}
+            </tbody>
+        </table>
         </div>
       </div>  
     );

@@ -18,5 +18,4 @@ public class AlertService {
     public Alert getLatestAlert() {
         return alertRepository.findTopByOrderByCreatedDateDesc();
     }
-
 }

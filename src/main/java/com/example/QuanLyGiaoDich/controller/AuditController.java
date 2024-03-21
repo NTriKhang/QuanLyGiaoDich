@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.QuanLyGiaoDich.Services.PolicyService;
 import com.example.QuanLyGiaoDich.dto.AddAuditDto;
 import com.example.QuanLyGiaoDich.dto.AuditPolicyDto;
+import com.example.QuanLyGiaoDich.dto.AuditTrialDto;
 import com.example.QuanLyGiaoDich.dto.UserDetailAdminDto;
 import com.example.QuanLyGiaoDich.dto.UserInfoDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -47,5 +48,11 @@ public class AuditController {
 	public ResponseEntity<List<String>> getAllTableName() {
 		List<String> listTableName = policyService.getAllTable(userSystemName);
 		return ResponseEntity.ok(listTableName);
+	}
+	
+	@GetMapping("/getAuditTrail")
+	public ResponseEntity<List<AuditTrialDto>> getAuditTrialTable() {
+		List<AuditTrialDto> listAuditTrail = policyService.getAuditTrail();
+		return ResponseEntity.ok(listAuditTrail);
 	}
 }
