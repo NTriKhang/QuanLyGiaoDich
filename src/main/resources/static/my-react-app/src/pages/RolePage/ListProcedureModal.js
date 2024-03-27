@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal, Table } from 'antd';
-const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
+
+const ListProcedureModal = ({ onClose, isModalOpen, roleName }) => {
 
   const dataFetchedRef = React.useRef(false);
   const [listUser, setListUser] = useState(null)
@@ -9,19 +10,19 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
 
   const columns = [
     {
-      title: 'User name',
-      dataIndex: 'USERNAME',
-      key: 'USERNAME',
+      title: 'proc name',
+      dataIndex: 'PROCNAME',
+      key: 'PROCNAME',
     }
   ]
   const showRoleDetail = () => {
-    fetch('http://localhost:8080/api/v1/users/listUser', {
+    fetch('http://localhost:8080/api/v1/privilege/getProc', {
       method: 'GET'
     })
       .then(response => response.json())
       .then(data => {
-        const modifiedData = data[0].map((element, index) => {
-          return { USERNAME: element.USERNAME, key: index };
+        const modifiedData = data.map((element, index) => {
+          return { PROCNAME: element, key: index };
         });
         setListUser(modifiedData);
       });
@@ -34,15 +35,15 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
   };
   const handleOk = () => {
     if (selectedRowData) {
-      const username = selectedRowData.USERNAME;
-      console.log('Selected Username:', username);
+      const procName = selectedRowData.PROCNAME;
+      console.log('Selected Username:', procName);
 
       try {
         const assignRole = {
-          UserName: username,
+          UserName: procName,
           RoleName: roleName
         }
-        fetch('http://localhost:8080/api/v1/privilege/assignRoleToUser', {
+        fetch('http://localhost:8080/api/v1/privilege/grant_execute_to_role', {
           method: 'POST',
           body: JSON.stringify(assignRole)
         }).then(res => {
@@ -50,18 +51,7 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
           if(res.ok){
 
             alert("assign successfully")
-
-            try{
-                fetch('http://localhost:8080/api/v1/users/logout_all/' + username,{
-                    method: 'GET',
-                      // mode: 'no-cors',
-                }).then(res => {
-                    console.log('disconnect user successfully')
-                    onClose();
-                });
-            }catch{
-                console.log("err")
-            }
+            onClose();
           }
         });
       } catch {
@@ -73,6 +63,7 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
     return selectedRowKeys.includes(index) ? 'selected-row' : '';
   };
   React.useEffect(() => {
+    console.log("test")
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
 
@@ -102,4 +93,4 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
     </>
   );
 };
-export default ListUserModal;
+export default ListProcedureModal;  

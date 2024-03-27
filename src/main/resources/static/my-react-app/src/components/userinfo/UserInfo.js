@@ -177,7 +177,8 @@ const UserInfo = (props) => {
 	const getListProfileName = () => {
 		var listName = [];
 		var resArr = [];
-		listProfile.map((item) => {
+		console.log(listProfile)
+		listProfile?.map((item) => {
 			if(item.PROFILE != listName[item.PROFILE]) {
 				listName[item.PROFILE] = item.PROFILE;
 			}

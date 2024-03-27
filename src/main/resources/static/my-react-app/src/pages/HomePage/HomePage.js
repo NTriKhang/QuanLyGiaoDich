@@ -66,29 +66,19 @@ const Home = (props) => {
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(transaction),
+				body: JSON.stringify(transaction), 
 			});
 		
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.message || 'Failed to transfer.');
+				window.alert('Failed to transfer.');
 			}
-		
-			const data = await response.json();
-			if (data.warning) {
-				window.alert(data.warning);
-				setShouldFetchAlert(true);
-			} else {
+			else{
 				window.alert('Transfer successful');
 			}
-		} catch (error) {
-			window.alert(error.message);
-			console.error('Error:', error);
 		} finally {
 			setUsername('');
 			setMoney('');
-			setShouldFetchAlert(false);
-			setAlertMessage('');
 		}
 	};
 	
