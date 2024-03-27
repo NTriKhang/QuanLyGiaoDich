@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
+import { Dropdown, Space, message } from "antd";
+import { DownOutlined } from '@ant-design/icons';
+
 
 const AddRolePage = (props) => {
     const dataFetchedRef = React.useRef(false);
@@ -8,6 +11,8 @@ const AddRolePage = (props) => {
     const [checkboxValues, setCheckboxValues] = useState({}); // State to manage checkbox values
     const [tableName, setTableName] = useState([]);
     const [roleName, setRoleName] = useState();
+    const [listProc, setListProc] = useState(null)
+    let listProcFe = false;
     const navigate = useNavigate();
 
     const toggleTableCheckbox = (tableName) => {
@@ -77,7 +82,6 @@ const AddRolePage = (props) => {
                 }
                 else{
                     alert("create success")
-                    navigate('/roleManage')
                 }
             });
         } catch {
@@ -103,7 +107,24 @@ const AddRolePage = (props) => {
                 setTableName(data);
             });
     }
-
+    // let items = [];
+    // const getProc = () => {
+    //     fetch('http://localhost:8080/api/v1/privilege/getProc', {
+    //         method: 'GET'
+    //     })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             const modifiedData = data.map((element, index) => {
+    //                 // Add a key field to each element with the index value
+    //                 return { label: element, key: index };
+    //             });
+    //               setListProc(modifiedData);
+    //             items = modifiedData;
+    //             console.log(items)
+    //             listProcFe = true;
+    //             console.log(listProcFe)
+    //         });
+    // }
     // const addAudit = (objectName, policyName, statementType) => {
     //     try {
     //         const audit = {
@@ -130,6 +151,9 @@ const AddRolePage = (props) => {
     //         console.log("Error when fetching: " + err);
     //     }
     // }
+    // const onClick = ({ key }) => {
+    //     message.info(`Click on item ${key}`);
+    //   };
 
     useEffect(() => {
         if (dataFetchedRef.current) return;
@@ -141,7 +165,7 @@ const AddRolePage = (props) => {
     return (
         <div>
             <Navbar />
-            <div className="container w-25 p-0">
+            <div className="container w-25 p-0 mb-5">
                 <h2>Add Role</h2>
                 <div>
                     <input
@@ -200,9 +224,22 @@ const AddRolePage = (props) => {
                     </div>
                 </div>
                 <div>
-                    <button onClick={handleSubmit}>Submit</button>
+                    <button onClick={handleSubmit} className="btn btn-primary">Submit</button>
                 </div>
             </div>
+            {/* {listProcFe && <Dropdown
+                menu={{
+                items,
+                onClick,
+                }}
+            >
+                <a onClick={(e) => e.preventDefault()}>
+                <Space>
+                    <button className="btn btn-success">Function</button>
+                    <DownOutlined />
+                </Space>
+                </a>
+            </Dropdown>} */}
         </div>
     );
 }

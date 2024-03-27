@@ -91,7 +91,6 @@ const AddAuditPage = (props) => {
     }, [selectCheck, insertCheck, updateCheck, deleteCheck])
     
     return (
-        <div>
           <div>
 
           <Navbar />
