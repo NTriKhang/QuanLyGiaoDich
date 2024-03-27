@@ -56,6 +56,11 @@ public class PrivilegeController {
 		List<String> tableCol = privilegeService.getAllTableAttribute(table_name);
 		return ResponseEntity.ok(tableCol);
 	}
+	@GetMapping("/getProc")
+	public ResponseEntity<List<String>> getAllTable() {
+		List<String> tableCol = privilegeService.getAllProcedure();
+		return ResponseEntity.ok(tableCol);
+	}
 	@GetMapping("/getAllTable")
 	public ResponseEntity<List<String>> getAllTableName() {
 		List<String> listTableName = policyService.getAllTable(userSystemName);
@@ -103,7 +108,30 @@ public class PrivilegeController {
 	    System.out.println(result);
 	    return new ResponseEntity<Integer>(result, HttpStatus.OK);
   }
-	
+	@PostMapping("/grant_execute_to_role")
+	public ResponseEntity<String> grant_execute_to_role(@RequestBody String assignRole) throws JsonMappingException, JsonProcessingException {
+	    ObjectMapper mapper = new ObjectMapper();
+	    AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
+	    String result = privilegeService.grant_execute_to_role(assignRoleDto.RoleName, assignRoleDto.UserName);
+	    System.out.println(result);
+	    return new ResponseEntity<String>(result, HttpStatus.OK);
+  }
+	@PostMapping("/revoke_execute_proc")
+	public ResponseEntity<String> revoke_execute_proc(@RequestBody String assignRole) throws JsonMappingException, JsonProcessingException {
+	    ObjectMapper mapper = new ObjectMapper();
+	    AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
+	    String result = privilegeService.revoke_execute_proc(assignRoleDto.RoleName, assignRoleDto.UserName);
+	    System.out.println(result);
+	    return new ResponseEntity<String>(result, HttpStatus.OK);
+  }
+	@PostMapping("/revoke_role_from_user")
+	public ResponseEntity<String> revoke_role_from_user(@RequestBody String assignRole) throws JsonMappingException, JsonProcessingException {
+	    ObjectMapper mapper = new ObjectMapper();
+	    AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
+	    String result = privilegeService.revoke_role_from_user(assignRoleDto.RoleName, assignRoleDto.UserName);
+	    System.out.println(result);
+	    return new ResponseEntity<String>(result, HttpStatus.OK);
+  }
 	@Autowired
 	private PrivilegeServices privilegeServices;
 	

@@ -111,7 +111,8 @@ const AddAuditPage = (props) => {
     }, [selectCheck, insertCheck, updateCheck, deleteCheck])
     
     return (
-        <div>
+          <div>
+
           <Navbar />
           <button 
             className="btn btn-primary me-2"

@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 
 import org.hibernate.dialect.OracleTypes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.CallableStatementCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,8 @@ import com.example.QuanLyGiaoDich.dto.UserAssignedRoleDto;
 @Service
 public class PrivilegeService {
 	private JdbcTemplate jdbcTemplate;
-
+	@Value("${spring.datasource.username}")
+	private String userSystemName;
 	@Autowired
 	public PrivilegeService(DataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -99,6 +101,22 @@ public class PrivilegeService {
 			return listResult;
 		});
 	}
+	public List<String> getAllProcedure() {
+		return jdbcTemplate.execute(conn -> {
+			CallableStatement stmt = conn.prepareCall("{ ? = call get_procedures(?) }");
+			stmt.registerOutParameter(1, OracleTypes.CURSOR);
+			stmt.setString(2, userSystemName);
+			return stmt;
+		}, (CallableStatementCallback<List<String>>) stmt -> {
+			stmt.execute();
+			ResultSet rs = (ResultSet) stmt.getObject(1);
+			List<String> listResult = new ArrayList<>();
+			while (rs.next()) {
+				listResult.add(rs.getString("OBJECT_NAME"));
+			}
+			return listResult;
+		});
+	}
 
 	public String addRolePrivilege(String p_role_name, String execute_cmds, String table_names) {
 		System.out.println(p_role_name + " " + execute_cmds + " " + table_names);
@@ -107,6 +125,40 @@ public class PrivilegeService {
 			stmt.setString(1, p_role_name);
 			stmt.setString(2, execute_cmds);
 			stmt.setString(3, table_names);
+			return stmt;
+		}, (CallableStatementCallback<String>) stmt -> {
+			stmt.execute();
+			return "completed";
+		});
+	}
+
+	public String grant_execute_to_role(String p_role_name, String p_procedure_name) {
+		return jdbcTemplate.execute(conn -> {
+			CallableStatement stmt = conn.prepareCall("{ call grant_execute_to_role(?,?) }");
+			stmt.setString(1, p_procedure_name);
+			stmt.setString(2, p_role_name);
+			return stmt;
+		}, (CallableStatementCallback<String>) stmt -> {
+			stmt.execute();
+			return "completed";
+		});
+	}
+	public String revoke_execute_proc(String p_role_name, String p_procedure_name) {
+		return jdbcTemplate.execute(conn -> {
+			CallableStatement stmt = conn.prepareCall("{ call revoke_execute_proc(?,?) }");
+			stmt.setString(1, p_procedure_name);
+			stmt.setString(2, p_role_name);
+			return stmt;
+		}, (CallableStatementCallback<String>) stmt -> {
+			stmt.execute();
+			return "completed";
+		});
+	}
+	public String revoke_role_from_user(String p_role_name, String p_username) {
+		return jdbcTemplate.execute(conn -> {
+			CallableStatement stmt = conn.prepareCall("{ call revoke_role_from_user(?,?) }");
+			stmt.setString(1, p_role_name);
+			stmt.setString(2, p_username);
 			return stmt;
 		}, (CallableStatementCallback<String>) stmt -> {
 			stmt.execute();
