@@ -57,15 +57,33 @@ public class PolicyService {
         );  
     }
     
-    public String addFgaPolicy(String objectSchema, String objectName, String policyName, String statementType) {	
+    public String addFgaPolicy(String objectSchema, String objectName, String policyName, String statementType, String auditCondition) {	
     	return jdbcTemplate.execute(
                 conn -> {
-                	CallableStatement stmt = conn.prepareCall("{? = call ADD_FGA_POLICY(?,?,?,?) }");
+                	CallableStatement stmt = conn.prepareCall("{? = call ADD_FGA_POLICY(?,?,?,?,?) }");
                 	stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
     				stmt.setString(2, objectSchema);
     				stmt.setString(3, objectName);
     				stmt.setString(4, policyName);
     				stmt.setString(5, statementType);
+    				stmt.setString(6, auditCondition);
+                    return stmt;
+                },
+                (CallableStatementCallback<String>) stmt -> {
+                    stmt.execute();
+                   return stmt.getString(1);
+                }
+            );
+    }
+    
+    public String deleteFgaPolicy(String objectSchema, String objectName, String policyName) {	
+    	return jdbcTemplate.execute(
+                conn -> {
+                	CallableStatement stmt = conn.prepareCall("{? = call DELETE_FGA_POLICY(?,?,?) }");
+                	stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+    				stmt.setString(2, objectSchema);
+    				stmt.setString(3, objectName);
+    				stmt.setString(4, policyName);
                     return stmt;
                 },
                 (CallableStatementCallback<String>) stmt -> {
@@ -146,15 +164,18 @@ public class PolicyService {
     		);
     }
     
-    public int addProfile(String profileName, int sessionPerUser, int idleTime, int connectTime) {	
+    public int addProfile(String profileName, int sessionPerUser, int idleTime, 
+    		int connectTime, int failedLoginAttempts, int passwordLockTime) {	
     	return jdbcTemplate.execute(
                 conn -> {
-                	CallableStatement stmt = conn.prepareCall("{? = call add_profile(?,?,?,?) }");
+                	CallableStatement stmt = conn.prepareCall("{? = call add_profile(?,?,?,?,?,?) }");
                 	stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
     				stmt.setString(2, profileName);
     				stmt.setInt(3, sessionPerUser);
     				stmt.setInt(4, idleTime);
     				stmt.setInt(5, connectTime);
+    				stmt.setInt(6, failedLoginAttempts);
+    				stmt.setInt(7, passwordLockTime);
                     return stmt;
                 },
                 (CallableStatementCallback<Integer>) stmt -> {

@@ -36,7 +36,8 @@ public class ProfileController {
 	public ResponseEntity<String> addProfile(@RequestBody String infoProfile) throws JsonMappingException, JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		AddProfileDto profile = mapper.readValue(infoProfile, AddProfileDto.class);
-		int status = policyService.addProfile(profile.profileName, profile.sessionPerUser, profile.idleTime, profile.connectTime);
+		int status = policyService.addProfile(profile.profileName, profile.sessionPerUser, profile.idleTime, 
+				profile.connectTime, profile.failedLoginAttempts, profile.passwordLockTime);
 		if(status == 1) {
 			return ResponseEntity.ok().body("{\"success\": \"" + "create profile successfully" + "\"}");
 		}

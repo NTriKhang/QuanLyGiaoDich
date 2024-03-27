@@ -13,6 +13,7 @@ const AuditTrial = () => {
         })
         .then(response => response.json()) 
         .then(res => {
+            console.log(res)
             setListInfo(res);
         })
     }

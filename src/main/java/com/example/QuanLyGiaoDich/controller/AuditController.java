@@ -40,7 +40,16 @@ public class AuditController {
 		ObjectMapper mapper = new ObjectMapper();
 		AddAuditDto audit = mapper.readValue(auditInfo, AddAuditDto.class);
 		System.out.println(audit);
-	    policyService.addFgaPolicy(userSystemName, audit.p_object_name, audit.p_policy_name, audit.p_type);
+	    policyService.addFgaPolicy(userSystemName, audit.p_object_name, audit.p_policy_name, audit.p_type, audit.p_audit_condition);
+	    return ResponseEntity.ok(audit);
+	}
+	
+	@PostMapping("/deleteAudit")
+	public ResponseEntity<AddAuditDto> deleteAudit(@RequestBody String auditInfo) throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		AddAuditDto audit = mapper.readValue(auditInfo, AddAuditDto.class);
+		System.out.println(audit);
+	    policyService.deleteFgaPolicy(userSystemName, audit.p_object_name, audit.p_policy_name);
 	    return ResponseEntity.ok(audit);
 	}
 	

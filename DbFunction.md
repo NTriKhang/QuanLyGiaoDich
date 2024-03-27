@@ -819,3 +819,45 @@ BEGIN
         ORDER BY a.CreatedDate DESC;
 END;
 
+---v5------
+---Hieu---
+create or replace FUNCTION ADD_FGA_POLICY (
+    p_object_schema IN VARCHAR2,
+    p_object_name IN VARCHAR2,
+    p_policy_name IN VARCHAR2,
+    p_type IN VARCHAR2,
+    p_audit_condition IN VARCHAR2
+) RETURN VARCHAR2 AS
+    v_audit_condition VARCHAR2(1000);
+BEGIN
+    IF p_audit_condition = 'All' THEN
+        v_audit_condition := '1=1';
+    ELSE
+        v_audit_condition := 'SYS_CONTEXT(''USERENV'', ''SESSION_USER'') = ''' || UPPER(p_audit_condition) || '''';
+    END IF;
+
+    DBMS_FGA.add_policy(
+        object_schema   => p_object_schema,
+        object_name     => p_object_name,
+        policy_name     => p_policy_name,
+        audit_condition => v_audit_condition,
+        statement_types => p_type
+    );
+
+    RETURN 'Policy added successfully';
+END ADD_FGA_POLICY;
+
+create or replace FUNCTION DELETE_FGA_POLICY (
+    p_object_schema IN VARCHAR2,
+    p_object_name IN VARCHAR2,
+    p_policy_name IN VARCHAR2
+) RETURN VARCHAR2 AS
+BEGIN
+        DBMS_FGA.DROP_POLICY(
+        OBJECT_NAME => p_object_name,
+        OBJECT_SCHEMA => p_object_schema,
+        POLICY_NAME => p_policy_name
+    );
+
+    RETURN 'Policy deleted successfully';
+END DELETE_FGA_POLICY;
