@@ -3,17 +3,17 @@ package com.example.QuanLyGiaoDich.dto;
 import java.sql.Date;
 
 public class InfoTransaction {
-	private Long transactionID;
-    private String senderUser;
-    private String recipientUser;
-    private String transactionType;
-    private double amount;
-    private Date transactionDate;
+	public String transactionID;
+	public String senderUser;
+	public String recipientUser;
+	public String transactionType;
+	public double amount;
+	public Date transactionDate;
     
-	public Long getTransactionID() {
+	public String getTransactionID() {
 		return transactionID;
 	}
-	public void setTransactionID(Long transactionID) {
+	public void setTransactionID(String transactionID) {
 		this.transactionID = transactionID;
 	}
 	public String getSenderUser() {
