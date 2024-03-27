@@ -39,22 +39,20 @@ public class TransactionService {
 			return false;
 
 		try {
-			// Prepare the call to the stored procedure
-			CallableStatement callableStatement = connection
-					.prepareCall("{call " + userSystemName + ".INSERT_TRANSACTION(?, ?, ?, ?)}");
+            // Prepare the call to the stored procedureA
+            CallableStatement callableStatement = connection.prepareCall("{call " + userSystemName + ".INSERT_TRANSACTION(?, ?, ?, ?)}");
 
-			callableStatement.setString(1, transactionDto.userName.split(" ")[0]);
-			callableStatement.setString(2, transactionDto.recipientUserName);
-			callableStatement.setString(3, "test");
-			callableStatement.setDouble(4, transactionDto.amount);
+            callableStatement.setString(1, transactionDto.userName.split(" ")[0]); 
+            callableStatement.setString(2, transactionDto.recipientUserName); 
+            callableStatement.setString(3, "test"); 
+            callableStatement.setDouble(4, transactionDto.amount); 
+            callableStatement.execute();
+            System.out.println("Stored procedure executed successfully.");
 
-			callableStatement.execute();
-			System.out.println("Stored procedure executed successfully.");
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
 		return true;
 	}
 

@@ -1,8 +1,9 @@
-package com.example.QuanLyGiaoDich.controller;
+ package com.example.QuanLyGiaoDich.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -74,13 +75,15 @@ public class TransactionController {
 	public ResponseEntity<?> createTransaction(@RequestBody TransactionDto transactionDto)
 			throws ClassNotFoundException, SQLException {
 		boolean transactionResult = transactionService.add_transaction(transactionDto);
+		
 		String alertMessage = null;
 		if (transactionResult) {
 			Alert latestUnprocessedAlert = alertService.getLatestUnprocessedAlert();
 			alertMessage = latestUnprocessedAlert != null ? latestUnprocessedAlert.getMessage() : null;
+			TransactionResponseDto response = new TransactionResponseDto(transactionDto, alertMessage);
+			return ResponseEntity.ok(response);
 		}
-		TransactionResponseDto response = new TransactionResponseDto(transactionDto, alertMessage);
-		return ResponseEntity.ok(response);
+		return new ResponseEntity<>(transactionResult, HttpStatus.BAD_REQUEST);
 	}
 
 	// Endpoint to update an existing transaction

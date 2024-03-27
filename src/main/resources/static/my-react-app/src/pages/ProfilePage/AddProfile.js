@@ -13,6 +13,8 @@ const AddProfile = (props) => {
     const [sessionPerUser, setSessionPerUser] = useState(1);
     const [idleTime, setIdleTime] = useState(1);
     const [connectTime, setConnectTime] = useState(1);
+    const [failedLoginAttempts, setFailLoginAttempts] = useState(1);
+    const [passwordLockTime, setPasswordLockTime] = useState(1);
 
     const onHandleSubmit = () => {
         var str = profileName.trim();
@@ -28,13 +30,15 @@ const AddProfile = (props) => {
       });
     };
 
-    const addProfile = (p_profileName, p_sessionPerUser, p_idleTime, p_connectTime) => {
+    const addProfile = (p_profileName, p_sessionPerUser, p_idleTime, p_connectTime, p_failed_login_attempts, p_password_lock_time) => {
       try {
         const profile = {
           profileName: p_profileName,
           sessionPerUser: p_sessionPerUser,
           idleTime: p_idleTime,
-          connectTime: p_connectTime
+          connectTime: p_connectTime,
+          failedLoginAttempts: p_failed_login_attempts,
+          passwordLockTime: p_password_lock_time
       }
         fetch("http://localhost:8080/api/v1/profile/addProfile", {
           method: "POST",
@@ -123,12 +127,34 @@ const AddProfile = (props) => {
                 onChange={ev => setConnectTime(ev.target.value)}
                 type="number" />
             </Form.Item>
+
+            <Form.Item
+              name="title5"
+              label="Failed Login Attempts"
+            >
+            <Input
+                value={profileName}
+                placeholder="Failed Login Attempts"
+                onChange={ev => setFailLoginAttempts(ev.target.value)}
+                type="number" />
+            </Form.Item>
+
+            <Form.Item
+              name="title6"
+              label="Password Lock Time"
+            >
+            <Input
+                value={profileName}
+                placeholder="Password Lock Time"
+                onChange={ev => setPasswordLockTime(ev.target.value)}
+                type="number" />
+            </Form.Item>
               
             {contextHolder}
             <button 
                 className="btn btn-primary w-100"
                 onClick={(e) => {
-                    addProfile(profileName, sessionPerUser, idleTime, connectTime);
+                    addProfile(profileName, sessionPerUser, idleTime, connectTime, failedLoginAttempts, passwordLockTime);
                     onHandleSubmit();
                 }}    >
                     Add
