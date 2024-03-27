@@ -1,8 +1,6 @@
 package com.example.QuanLyGiaoDich.dto;
 
-public class AddAuditDto {
+public class DeleteAuditDto {
 	public String p_object_name;
 	public String p_policy_name;
-	public String p_type;
-	public String p_audit_condition;
 }

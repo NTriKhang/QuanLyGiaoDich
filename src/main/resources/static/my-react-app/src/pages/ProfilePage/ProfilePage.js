@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 
 import Navbar from "../../components/navbar/Navbar";
-import { MdOutlineAddToPhotos } from "react-icons/md";
 import { Form, Modal, message } from 'antd';
 import AddProfile from "./AddProfile";
 
@@ -105,7 +104,6 @@ const ProfilePage = () => {
                     className="btn btn-primary vertical-end"
                     onClick={() => {setOpen(true)}} >
                     Create
-                    <MdOutlineAddToPhotos className="mx-1" />
                 </button>
                 <CollectionCreateFormModal
                     open={open}

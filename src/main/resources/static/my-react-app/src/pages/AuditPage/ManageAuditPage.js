@@ -30,14 +30,43 @@ const ManageAuditPage = (props) => {
             setListInfo(data);
         });
     }
+
+    const deleteAudit = (objectName, policyName) => {
+      try {
+          const audit = {
+              p_object_name: objectName,
+              p_policy_name: policyName,
+          }
+
+          fetch('http://localhost:8080/api/v1/audit/deleteAudit', {
+          method: 'POST',
+          body: JSON.stringify(audit),
+      })
+      .then(res => {
+          if(!res.ok) {
+              throw new Error("Something went wrong!");
+          }
+          return res.json();
+      })
+      .then(res => {
+          console.log("Success !");
+      })
+      }
+      catch(err) {
+          console.log("Error when fetching: " + err);
+      }
+  }
     
     useEffect(() => {
         if (dataFetchedRef.current) return;
         dataFetchedRef.current = true;
 
         showListPolicy();
-        console.log(listInfo)
     }, []);
+
+    useEffect(() => {
+      showListPolicy();
+    }, [listInfo])
 
     const items = [
         {
@@ -169,6 +198,7 @@ const ManageAuditPage = (props) => {
                           <th>POLICY_OWNER</th>
                           <th>POLICY_NAME</th>
                           <th>ENABLED</th>
+                          <th>ACTION</th>
                       </tr>
                   </thead>
                   <tbody>
@@ -179,6 +209,13 @@ const ManageAuditPage = (props) => {
                               <td className="text-center">{policy.POLICY_OWNER}</td>
                               <td className="text-center">{policy.POLICY_NAME}</td>
                               <td className="text-center">{policy.ENABLED}</td>
+                              <td className="text-center">
+                                <button 
+                                  className="btn btn-danger"
+                                  onClick={() => deleteAudit(policy.OBJECT_NAME, policy.POLICY_NAME)} >
+                                    DELETE
+                                </button>
+                              </td>
                           </tr>
                       ))}
                   </tbody>

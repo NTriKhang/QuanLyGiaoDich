@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { UNSAFE_DataRouterStateContext, useNavigate } from "react-router-dom";
 import Navbar from "../../components/navbar/Navbar";
 
 import { Button, Form, Input, Modal } from 'antd';
@@ -14,6 +14,8 @@ const AddAuditPage = (props) => {
     const [updateCheck, setUpdateCheck] =useState(false);
     const [deleteCheck, setDeleteCheck] = useState(false);
     const [insertCheck, setInsertCheck] = useState(false);
+    const [usersName, setUsersName] = useState([]);
+    const [condition, setCondition] = useState("");
     const navigate = useNavigate();
     const getTablename = () => {
         fetch('http://localhost:8080/api/v1/audit/getAllTable', {
@@ -25,12 +27,13 @@ const AddAuditPage = (props) => {
         });
     }
     
-    const addAudit = (objectName, policyName, statementType) => {
+    const addAudit = (objectName, policyName, statementType, _condition) => {
         try {
             const audit = {
                 p_object_name: objectName,
                 p_policy_name: policyName,
-                p_type: statementType
+                p_type: statementType,
+                p_audit_condition: _condition
             }
 
             fetch('http://localhost:8080/api/v1/audit/addAudit', {
@@ -51,6 +54,22 @@ const AddAuditPage = (props) => {
             console.log("Error when fetching: " + err);
         }
     }
+
+    const getUsersName = () => {
+        fetch('http://localhost:8080/api/v1/users/TableUser', {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            var lisUserName = [];
+            data[0]?.map((item) => {
+                lisUserName.push(item.userName);
+            })
+            setUsersName(lisUserName);
+        });
+    }
+
 
     const changeStatementType = () => {
         var result = [];
@@ -84,6 +103,7 @@ const AddAuditPage = (props) => {
         dataFetchedRef.current = true;
 
         getTablename();
+        getUsersName();
     }, []);
 
     useEffect(() => {
@@ -92,8 +112,6 @@ const AddAuditPage = (props) => {
     
     return (
         <div>
-          <div>
-
           <Navbar />
           <button 
             className="btn btn-primary me-2"
@@ -128,28 +146,42 @@ const AddAuditPage = (props) => {
                 </div>
             </div>
             <div>
-            <Form.Item
-              name="title"
-              label="Policy Name"
-              rules={[
-                {
-                  required: true,
-                  message: 'Please input the title of collection!',
-                },
-              ]}
-            >
-            <Input
-                value={policyName}
-                placeholder="Policy Name"
-                onChange={ev => setPolicyName(ev.target.value)}
-                type="text" />
-            </Form.Item>
-                {/* <input
+
+            <div>
+                <div className="form-group mt-4">
+                    <select
+                        id="listUserName"
+                        value={condition}
+                        onChange={e => setCondition(e.target.value)}
+                    >
+                        <option value={null}>User Name...</option>
+                        {Array.isArray(tableName) && usersName.map(username => (
+                            <option key={username} value={username}>{username}</option>
+                        ))}
+                         <option value={'All'}>All</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <Form.Item
+                name="title"
+                label="Policy Name"
+                rules={[
+                    {
+                    required: true,
+                    message: 'Please input the title of collection!',
+                    },
+                ]}
+                >
+                <Input
                     value={policyName}
                     placeholder="Policy Name"
                     onChange={ev => setPolicyName(ev.target.value)}
-                    className={"inputBox form-control pt-4 pb-4"}
-                    type="text" /> */}
+                    type="text" />
+                </Form.Item>    
+            </div>
+
             </div>
             <div>
             <div className="form-check" style={{flexDirection: 'row', display: 'flex', marginTop: '18px'}}>
@@ -207,7 +239,7 @@ const AddAuditPage = (props) => {
             <button 
                 className="btn btn-primary w-100"
                 onClick={() => {
-                    addAudit(objectName, policyName, statementType);
+                    addAudit(objectName, policyName, statementType, condition);
                     navigate("/auditManage");
                 }}    >
                     Add
