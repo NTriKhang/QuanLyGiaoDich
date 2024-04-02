@@ -47,6 +47,24 @@ const ManageUsersPage = () => {
             console.log("Error when fetching: " + err);
         }
     }
+    
+    const deleteUser = (user_name) => {
+        fetch(`http://localhost:8080/api/v1/users/deleteUser/${user_name}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if(response.ok) {
+                showListUser();
+                window.alert("User deleted successfully.");
+            } else {
+                throw new Error("Error occurred while deleting user.");
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting user:', error);
+            window.alert("Error occurred while deleting user.");
+        });
+    }
 
     React.useEffect(() => {
         if (dataFetchedRef.current) return;
@@ -78,6 +96,9 @@ const ManageUsersPage = () => {
                         <td className="text-center">
                             <button className="btn btn-primary" onClick={() => showDetailUser(user.USER_ID)}>Info</button>
                         </td>
+                        <td>
+							<button className="btn btn-danger" onClick={() => deleteUser(user.USERNAME)}>Xóa</button>
+						</td>
                     </tr>
                 ))}
             </tbody>

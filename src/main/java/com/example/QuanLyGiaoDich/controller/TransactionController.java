@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/transactions")
@@ -100,19 +101,25 @@ public class TransactionController {
 	 * ResponseEntity<>(HttpStatus.NOT_FOUND); } }
 	 */
 	@PutMapping("/{transactionId}")
-    public ResponseEntity<String> updateTransaction(@PathVariable long transactionId, @RequestHeader("UserName") String userName,@RequestParam(value = "newAmount", required = false) Double newAmount,@RequestParam(value = "newTransactionType", required = false) String newTransactionType) {
-        try {
-            boolean success = transactionService.update_transaction(transactionId, newAmount, newTransactionType, userName);
-            if (success) {
-                return ResponseEntity.ok("Transaction updated successfully.");
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No transaction updated.");
-            }
-        } catch (SQLException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating transaction.");
-        }
-    }
+	public ResponseEntity<String> updateTransaction(
+	    @PathVariable long transactionId,
+	    @RequestHeader("UserName") String userName,
+	    @RequestBody Map<String, Object> requestBody) {
+	    try {
+	    	Double newAmount = (Double) requestBody.get("newAmount");
+	        String newTransactionType = (String) requestBody.get("newTransactionType");
+	        boolean success = transactionService.update_transaction(transactionId, newAmount, newTransactionType, userName);
+	        if (success) {
+	            return ResponseEntity.ok("Transaction updated successfully.");
+	        } else {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No transaction updated.");
+	        }
+	    } catch (SQLException | ClassNotFoundException e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating transaction.");
+	    }
+	}
+
 
 	// Endpoint to delete a transaction by ID
 	/*

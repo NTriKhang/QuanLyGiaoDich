@@ -861,3 +861,143 @@ BEGIN
 
     RETURN 'Policy deleted successfully';
 END DELETE_FGA_POLICY;
+-----------v6-----------------
+CREATE OR REPLACE FUNCTION delete_db_user (
+    p_username IN VARCHAR2
+) RETURN NUMBER
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'DROP USER ' || p_username || ' CASCADE';
+    COMMIT;
+    RETURN 1;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+        RETURN 0;
+END;
+/
+
+create or replace PACKAGE user_management_pkg AS
+    PROCEDURE create_new_application_user(
+        p_user_id IN VARCHAR2,
+        p_first_name IN VARCHAR2,
+        p_last_name IN VARCHAR2,
+        p_address IN VARCHAR2,
+        p_phone IN VARCHAR2,
+        p_email IN VARCHAR2,
+        p_user_name IN VARCHAR2,
+        p_password IN VARCHAR2,
+        p_image_profile IN BLOB,
+        p_result OUT NUMBER
+    );
+
+    PROCEDURE delete_application_user(
+        p_user_name IN VARCHAR2,
+        p_result OUT NUMBER
+    );
+
+    FUNCTION get_info_user_by_id(
+        id IN VARCHAR2
+    )
+    RETURN SYS_REFCURSOR;
+END user_management_pkg;
+
+
+create or replace PACKAGE BODY user_management_pkg AS
+    PROCEDURE create_new_application_user(
+        p_user_id IN VARCHAR2,
+        p_first_name IN VARCHAR2,
+        p_last_name IN VARCHAR2,
+        p_address IN VARCHAR2,
+        p_phone IN VARCHAR2,
+        p_email IN VARCHAR2,
+        p_user_name IN VARCHAR2,
+        p_password IN VARCHAR2,
+        p_image_profile IN BLOB,
+        p_result OUT NUMBER
+    ) IS
+        v_user_count NUMBER;
+        v_created_date TIMESTAMP;
+    BEGIN
+        SELECT COUNT(*)
+        INTO v_user_count
+        FROM all_users
+        WHERE username = UPPER(p_user_name); 
+
+        IF v_user_count = 0 THEN
+            -- Get the current timestamp
+            SELECT CAST(SYSTIMESTAMP AS TIMESTAMP) INTO v_created_date FROM DUAL;
+
+            INSERT INTO users
+            VALUES (p_user_id, p_first_name, p_last_name, p_address, p_phone, p_email, p_user_name, p_password, p_image_profile, 0, v_created_date, NULL);
+
+            DECLARE user_db_res NUMBER;
+            BEGIN
+                user_db_res := create_new_db_user(p_user_name, p_password);
+                IF user_db_res = 1 THEN    
+                    p_result := 200; 
+                ELSE 
+                    p_result := 400; 
+                END IF;
+            END;
+        ELSE
+            p_result := 409; 
+        END IF;
+    END create_new_application_user;
+
+    PROCEDURE delete_application_user(
+        p_user_name IN VARCHAR2,
+        p_result OUT NUMBER
+    ) IS
+        v_user_id VARCHAR2(50);
+    BEGIN
+        SELECT UserID INTO v_user_id
+        FROM Users
+        WHERE UserName = p_user_name;
+
+        IF v_user_id IS NOT NULL THEN
+
+            DELETE FROM Transaction
+            WHERE SenderUserID = v_user_id OR RecipientUserID = v_user_id;
+
+            DELETE FROM Beneficiary
+            WHERE UserID = v_user_id;
+
+            DELETE FROM Users
+            WHERE UserName = p_user_name;
+
+            DECLARE
+                db_delete_result NUMBER;
+            BEGIN
+                db_delete_result := delete_db_user(p_user_name);
+
+                IF db_delete_result = 1 THEN
+                    p_result := 200;
+                ELSE
+                    p_result := 500;
+                END IF;
+            END;
+        ELSE
+            p_result := 404;
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            p_result := 500;
+    END delete_application_user;
+
+    FUNCTION get_info_user_by_id(
+        id IN VARCHAR2
+    )
+    RETURN SYS_REFCURSOR
+    IS
+        v_cursor SYS_REFCURSOR;
+    BEGIN
+        OPEN v_cursor FOR
+        SELECT USER_ID, USERNAME, CREATED, EXPIRY_DATE, ACCOUNT_STATUS, LAST_LOGIN, PROFILE 
+        FROM DBA_USERS
+        WHERE USER_ID = id;
+
+        RETURN v_cursor;
+    END get_info_user_by_id;
+END user_management_pkg;
+

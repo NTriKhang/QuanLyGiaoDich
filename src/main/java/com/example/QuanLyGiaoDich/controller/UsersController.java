@@ -212,16 +212,16 @@ public class UsersController {
 		}
 	}
 
-	// Endpoint to delete a user by ID
-	@DeleteMapping("/{userID}")
-	public ResponseEntity<Void> deleteUser(@PathVariable String userID) {
-		if (userRepository.existsById(userID)) {
-			userRepository.deleteById(userID);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
+//	// Endpoint to delete a user by ID
+//	@DeleteMapping("/{userID}")
+//	public ResponseEntity<Void> deleteUser(@PathVariable String userID) {
+//		if (userRepository.existsById(userID)) {
+//			userRepository.deleteById(userID);
+//			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//		} else {
+//			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//		}
+//	}
 	@GetMapping("/tablespaces")
     public ResponseEntity<List<String>> getTablespaces() {
         try {
@@ -267,4 +267,18 @@ public class UsersController {
 	        return new ResponseEntity<>("Lỗi khi lấy thông tin max quota size.", HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}
+	@DeleteMapping("/deleteUser/{userName}")
+    public String deleteUser(@PathVariable String userName) {
+        int result = userService.deleteApplicationUser(userName);
+        
+        if (result == 200) {
+            return "User deleted successfully.";
+        } else if (result == 404) {
+            return "User not found.";
+        } else if (result == 500) {
+            return "Error occurred while deleting user.";
+        } else {
+            return "Unknown error.";
+        }
+    }
 }
