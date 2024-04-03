@@ -905,3 +905,81 @@ BEGIN
 END;
 /
 set serveroutput on;
+
+---Hieu-------
+alter table transaction add (VOICE BLOB);
+
+create or replace function insert_normal_transaction (
+    p_sender_user_id in varchar2,
+    p_recipient_user_id in varchar2,
+    p_transaction_type in varchar2,
+    p_amount in number,
+    p_voice in blob
+) return int as
+begin
+    execute immediate 'INSERT INTO transaction (
+        TRANSACTIONID, 
+        SENDERUSERID, 
+        RECIPIENTUSERID, 
+        TRANSACTIONTYPE, 
+        AMOUNT, 
+        TRANSACTIONDATE,
+        VOICE
+    ) VALUES (
+        TRANSACTION_SEQ.NEXTVAL, ''' || 
+        p_sender_user_id || ''', ''' ||
+        p_recipient_user_id || ''', ''' ||
+        p_transaction_type || ''', ' ||
+        p_amount || ', CURRENT_TIMESTAMP
+        
+        )';
+
+    return 1;
+end;
+
+create or replace PROCEDURE insert_transaction (
+    p_sender_user_name IN VARCHAR2,
+    p_recipient_user_name IN VARCHAR2,
+    p_transaction_type IN VARCHAR2,
+    p_amount IN NUMBER,
+    p_voice IN BLOB
+)
+IS
+    v_userSenderId VARCHAR2(50);
+    v_userRecipentId VARCHAR2(50);
+BEGIN
+    -- Get Sender User ID
+    SELECT userId INTO v_userSenderId FROM users WHERE USERNAME = p_sender_user_name;
+
+    -- Get Recipient User ID
+    SELECT userId INTO v_userRecipentId FROM users WHERE USERNAME = p_recipient_user_name;
+
+    -- Insert the transaction
+    INSERT INTO CAOHIEEU.transaction (
+        TRANSACTIONID, 
+        SENDERUSERID, 
+        RECIPIENTUSERID, 
+        TRANSACTIONTYPE, 
+        AMOUNT, 
+        TRANSACTIONDATE,
+        VOICE
+    ) VALUES (
+        TRANSACTION_SEQ.NEXTVAL, -- Assumed that sequence is correctly created and named
+        v_userSenderId, 
+        v_userRecipentId, 
+        p_transaction_type, 
+        p_amount, 
+        CURRENT_TIMESTAMP,
+        p_voice
+    );
+    -- COMMIT should be removed or handled externally
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Handle user not found situation
+        -- You can log the error or raise a custom exception
+        RAISE_APPLICATION_ERROR(-20001, 'User not found.');
+    WHEN OTHERS THEN
+        -- Handle other errors
+        RAISE_APPLICATION_ERROR(-20002, SQLERRM);
+END;
+

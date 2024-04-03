@@ -1,14 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import './TransactionPage.css';
 import Navbar from '../../components/navbar/Navbar.js';
+import { Form, Modal, message } from 'antd';
+
+import AddTransaction from './AddTransaction.js';
 
 const TransactionPage = () => {
+	const [messageApi, contextHolder] = message.useMessage();
 	const [transactions, setTransactions] = useState([]);
 	const [userName, setUserName] = useState('');
 	const [error, setError] = useState(null);
 	const [originalTransactions, setOriginalTransactions] = useState([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [searchDate, setSearchDate] = useState('');
+	const [open, setOpen] = useState(false);
+    const [isAdded, setIsAdded] = useState(false);
+
+	const success = (p_content) => {
+		messageApi.open({
+		  type: 'success',
+		  content: p_content,
+		});
+	  };
+
+	const danger = (p_content) => {
+	messageApi.open({
+		type: 'error',
+		content: p_content,
+	});
+	};
+
+	  const CollectionCreateForm = ({ initialValues, onFormInstanceReady }) => {
+        const [form] = Form.useForm();
+        useEffect(() => {
+          onFormInstanceReady(form);
+        }, []);
+        return (
+          <Form layout="vertical" form={form} name="form_in_modal">
+            <AddTransaction setOpen={setOpen} success={success} setIsAdded={setIsAdded} danger={danger}/>
+          </Form>
+        );
+      };
+      const CollectionCreateFormModal = ({ open, onCancel, initialValues }) => {
+        const [formInstance, setFormInstance] = useState();
+        return (
+          <Modal
+            open={open}
+            title="Add Transaction"
+            okText="Create"
+            cancelText="Cancel"
+            okButtonProps={{
+              autoFocus: true,
+            }}
+            footer={[]}
+            onCancel={onCancel}
+            destroyOnClose
+            onOk={async () => {
+              try {
+                const values = await formInstance?.validateFields();
+                formInstance?.resetFields();
+              } catch (error) {
+                console.log('Failed:', error);
+              }
+            }}
+          >
+            <CollectionCreateForm
+              initialValues={initialValues}
+              onFormInstanceReady={(instance) => {
+                setFormInstance(instance);
+              }}
+            />
+          </Modal>
+        );
+      };
 
 	useEffect(() => {
 		let currentUser = localStorage.getItem('userNameKey');
@@ -34,6 +98,7 @@ const TransactionPage = () => {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			const data = await response.json();
+			console.log(data);
 			setTransactions(data);
 			setOriginalTransactions(data);
 		} catch (error) {
@@ -81,7 +146,6 @@ const TransactionPage = () => {
 				window.alert("Transaction deleted successfully.")
 			} else {
 				window.alert("You don't have privilege.")
-				console.error('Error deleting transaction:', response.statusText);
 			}
 		} catch (error) {
 			console.error('Error deleting transaction:', error);
@@ -117,7 +181,6 @@ const TransactionPage = () => {
 				window.alert("Transaction updated successfully.")
 			} else {
 				window.alert("You don't have privilege.")
-				console.error('Error updating transaction:', response.statusText);
 			}
 		} catch (error) {
 			console.error('Error updating transaction:', error);
@@ -126,6 +189,7 @@ const TransactionPage = () => {
 
 	return (
 		<div>
+			{contextHolder}
 			<Navbar />
 			<div className="search-bar">
 				<input
@@ -144,6 +208,18 @@ const TransactionPage = () => {
 				<button className="search-button" onClick={handleSearch}>Search</button>
 			</div>
 			<h1>Transactions of {userName}</h1>
+			<CollectionCreateFormModal
+                    open={open}
+                    onCancel={() => setOpen(false)}
+                    initialValues={{
+                    modifier: 'public',
+                    }}
+                />
+			<button
+				className='btn btn-primary d-flex mx-4' 
+				onClick={() => setOpen(true)} >
+					Add New
+			</button>
 			{(
 				transactions.length > 0 ? (
 					<table>
@@ -155,6 +231,8 @@ const TransactionPage = () => {
 								<th>Transaction Type</th>
 								<th>Amount</th>
 								<th>Transaction Date</th>
+								<th>Audio</th>
+								<th colSpan={2}>Action</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -166,6 +244,12 @@ const TransactionPage = () => {
 									<td>{transaction.transactionType}</td>
 									<td>{transaction.amount}</td>
 									<td>{new Date(transaction.transactionDate).toLocaleDateString('vi-VN')}</td>
+									<td>
+										<audio controls>
+											<source src={`data:audio/mp3;base64,${transaction.voice}`} type="audio/mp3" />
+											Audio
+										</audio>
+									 </td>
 									<td><button onClick={() => handleEditTransaction(transaction.transactionID)}>Sửa</button></td>
 									<td><button onClick={() => handleDeleteTransaction(transaction.transactionID)}>Xóa</button></td>
 								</tr>

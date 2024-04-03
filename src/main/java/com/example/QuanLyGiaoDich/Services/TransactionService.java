@@ -1,5 +1,6 @@
 package com.example.QuanLyGiaoDich.Services;
 
+import java.io.Console;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,42 +11,62 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.hibernate.dialect.OracleTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.CallableStatementCallback;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.QuanLyGiaoDich.Configure.MapUserConnection;
 import com.example.QuanLyGiaoDich.dto.InfoTransaction;
 import com.example.QuanLyGiaoDich.dto.TransactionDto;
+import com.example.QuanLyGiaoDich.models.Users;
+import com.example.QuanLyGiaoDich.repositories.UsersRepository;
 
 @Service
 public class TransactionService {
 	private final String userSystemName;
+	private final String userSystemPassword;
+	private final JdbcTemplate jdbcTemplate;
+	private final UsersRepository usersRepository;
+	private final UserService userService;
+	
+	
 
 	@Autowired
 	public TransactionService(JdbcTemplate jdbcTemplate,
-			@Value("${spring.datasource.username}") String userSystemName) {
+								@Value("${spring.datasource.username}") String userSystemName,
+								@Value("${spring.datasource.password}") String userSystemPassword,
+								UsersRepository usersRepository,
+								UserService userService
+			) {
 		this.userSystemName = userSystemName;
+		this.userSystemPassword = userSystemPassword;
+		this.jdbcTemplate = jdbcTemplate;
+		this.usersRepository = usersRepository;
+		this.userService = userService;
 	}
 
-	public Boolean add_transaction(TransactionDto transactionDto) throws SQLException, ClassNotFoundException {
+	public Boolean add_transaction(TransactionDto transactionDto, byte[] file) throws SQLException, ClassNotFoundException {
 		Connection connection = MapUserConnection.getConnection(transactionDto.userName);
 		if (connection == null)
 			return false;
 
 		try {
             // Prepare the call to the stored procedureA
-            CallableStatement callableStatement = connection.prepareCall("{call " + userSystemName + ".INSERT_TRANSACTION(?, ?, ?, ?)}");
+            CallableStatement callableStatement = connection.prepareCall("{call " + userSystemName + ".INSERT_TRANSACTION(?, ?, ?, ?, ?)}");
 
             callableStatement.setString(1, transactionDto.userName.split(" ")[0]); 
             callableStatement.setString(2, transactionDto.recipientUserName); 
             callableStatement.setString(3, "test"); 
-            callableStatement.setDouble(4, transactionDto.amount); 
+            callableStatement.setDouble(4, transactionDto.amount);
+            callableStatement.setBytes(5, file);
             callableStatement.execute();
             System.out.println("Stored procedure executed successfully.");
 
@@ -65,12 +86,13 @@ public class TransactionService {
 		List<InfoTransaction> transactions = new ArrayList<>();
 
 		Connection connection = MapUserConnection.getConnection(userName);
+		System.out.println(userName);
 		if (connection == null) {
 			return Collections.emptyList();
 		}
 		String userNameSplit = userName.split(" ")[0];
 		String sqlQuery = "SELECT t.TransactionID, u1.UserName AS UserNameGui, u2.UserName AS UserNameNhan, "
-				+ "t.TransactionType, t.Amount, t.TransactionDate " + "FROM " + userSystemName.toUpperCase()
+				+ "t.TransactionType, t.Amount, t.TransactionDate, t.Voice " + "FROM " + userSystemName.toUpperCase()
 				+ ".Transaction t " + "JOIN " + userSystemName.toUpperCase()
 				+ ".Users u1 ON t.SenderUserID = u1.UserID " + "JOIN " + userSystemName.toUpperCase()
 				+ ".Users u2 ON t.RecipientUserID = u2.UserID "
@@ -91,6 +113,7 @@ public class TransactionService {
 					transaction.setTransactionType(rs.getString("TransactionType"));
 					transaction.setAmount(rs.getDouble("Amount"));
 					transaction.setTransactionDate(rs.getDate("TransactionDate"));
+					transaction.voice = rs.getBytes("Voice");
 
 					transactions.add(transaction);
 				}
@@ -118,6 +141,7 @@ public class TransactionService {
 		}
 		return true;
 	}
+	
 	public Boolean update_transaction(long transactionId, Double newAmount, String newTransactionType, String userName) throws SQLException, ClassNotFoundException{
 		Connection connection = MapUserConnection.getConnection(userName);
 		if(connection == null) {
@@ -147,6 +171,75 @@ public class TransactionService {
 	            return false;
 	        }
 			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public void grantSequence(String sequenceName, String username) throws ClassNotFoundException, SQLException {
+		String sqlQuery = "GRANT SELECT ON " + sequenceName + " TO " + username;
+		System.out.println(sqlQuery);
+		Connection conn = userService.connect(userSystemName, userSystemPassword, " ");
+		try (PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery)){
+			preparedStatement.execute();
+			return;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
+	
+	public Boolean insert_transaction(
+			String userID,
+			String senderUserId, 
+			String recipientUserId, 
+			String transactionType,
+			Double amount,
+			byte[] voice
+		) throws SQLException, ClassNotFoundException {
+		Optional<Users> user = usersRepository.findById(userID);
+		String userName = user.map(Users::getUserName).orElse("DefaultUsername").trim();
+		String password = user.map(Users::getPassword).orElse("DefaultPassword").trim();
+		grantSequence("TRANSACTION_SEQ", userName);
+		Connection connection = userService.connect(userName, password, " ");
+		
+		if(connection == null) {
+			System.out.println("Connection is null !");
+			return false;
+		}
+		
+		System.out.println(userName);
+		String sqlQuery = "INSERT INTO " + userSystemName.toUpperCase() + ".transaction (" +
+			    "TRANSACTIONID, " +
+			    "SENDERUSERID, " +
+			    "RECIPIENTUSERID, " +
+			    "TRANSACTIONTYPE, " +
+			    "AMOUNT, " +
+			    "TRANSACTIONDATE, " +
+			    "VOICE" +
+			") VALUES (" +
+				userSystemName+
+				".TRANSACTION_SEQ.NEXTVAL, " +
+			    "?, " + 
+			    "?, " + 
+			    "?, " + 
+			    "?, " + 
+			    "CURRENT_TIMESTAMP, " +
+			    "?" + 
+			")";
+		System.out.println(sqlQuery);
+		try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)){
+			preparedStatement.setString(1, senderUserId);
+			preparedStatement.setString(2, recipientUserId);
+			preparedStatement.setString(3, transactionType);
+			preparedStatement.setDouble(4, amount);
+			preparedStatement.setBytes(5, voice);
+			preparedStatement.execute();
+			userService.closeConnection(connection);
+			return true;
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
