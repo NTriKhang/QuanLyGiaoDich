@@ -2,11 +2,11 @@ package com.example.QuanLyGiaoDich.dto;
 
 public class RoleDto {
 	public String role;
-	public String oracle_maintained;
-	public RoleDto(String role, String oracle_maintained) {
+	public String with_option;
+	public RoleDto(String role, String with_option) {
 		super();
 		this.role = role;
-		this.oracle_maintained = oracle_maintained;
+		this.with_option = with_option;
 	}
 	
 }

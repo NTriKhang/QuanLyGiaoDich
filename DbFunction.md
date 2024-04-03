@@ -861,6 +861,7 @@ BEGIN
 
     RETURN 'Policy deleted successfully';
 END DELETE_FGA_POLICY;
+
 -----------v6-----------------
 CREATE OR REPLACE FUNCTION delete_db_user (
     p_username IN VARCHAR2
@@ -1000,4 +1001,127 @@ create or replace PACKAGE BODY user_management_pkg AS
         RETURN v_cursor;
     END get_info_user_by_id;
 END user_management_pkg;
+
+----------------------v6
+----------Khang
+CREATE OR REPLACE PROCEDURE assign_role_to_user_option(
+    p_role_name IN VARCHAR2,
+    p_username  IN VARCHAR2
+)
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'GRANT ' || UPPER(p_role_name) || ' TO ' || UPPER(p_username) || ' WITH ADMIN OPTION';
+END assign_role_to_user_option;
+
+SELECT *
+FROM DBA_ROLE_PRIVS
+WHERE GRANTEE = 'VAN11';
+
+desc DBA_ROLE_PRIVS
+
+CREATE OR REPLACE FUNCTION user_role_with_grant(p_username IN VARCHAR2)
+RETURN SYS_REFCURSOR
+IS
+    c_result SYS_REFCURSOR;
+BEGIN
+    OPEN c_result FOR
+        SELECT GRANTED_ROLE, ADMIN_OPTION
+        FROM DBA_ROLE_PRIVS
+        WHERE GRANTEE = UPPER('Khang3');
+    RETURN c_result;
+END user_role_with_grant;
+/
+DECLARE
+    v_cursor SYS_REFCURSOR;
+    v_role_name VARCHAR2(100);
+    v_admin_option VARCHAR2(3);
+BEGIN
+    v_cursor := user_role_with_grant('KHANG3');
+    LOOP
+        FETCH v_cursor INTO v_role_name, v_admin_option;
+        EXIT WHEN v_cursor%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Role: ' || v_role_name || ', With Grant Option: ' || v_admin_option);
+    END LOOP;
+    CLOSE v_cursor;
+END;
+/
+set serveroutput on;
+
+---Hieu-------
+alter table transaction add (VOICE BLOB);
+
+create or replace function insert_normal_transaction (
+    p_sender_user_id in varchar2,
+    p_recipient_user_id in varchar2,
+    p_transaction_type in varchar2,
+    p_amount in number,
+    p_voice in blob
+) return int as
+begin
+    execute immediate 'INSERT INTO transaction (
+        TRANSACTIONID, 
+        SENDERUSERID, 
+        RECIPIENTUSERID, 
+        TRANSACTIONTYPE, 
+        AMOUNT, 
+        TRANSACTIONDATE,
+        VOICE
+    ) VALUES (
+        TRANSACTION_SEQ.NEXTVAL, ''' || 
+        p_sender_user_id || ''', ''' ||
+        p_recipient_user_id || ''', ''' ||
+        p_transaction_type || ''', ' ||
+        p_amount || ', CURRENT_TIMESTAMP
+        
+        )';
+
+    return 1;
+end;
+
+create or replace PROCEDURE insert_transaction (
+    p_sender_user_name IN VARCHAR2,
+    p_recipient_user_name IN VARCHAR2,
+    p_transaction_type IN VARCHAR2,
+    p_amount IN NUMBER,
+    p_voice IN BLOB
+)
+IS
+    v_userSenderId VARCHAR2(50);
+    v_userRecipentId VARCHAR2(50);
+BEGIN
+    -- Get Sender User ID
+    SELECT userId INTO v_userSenderId FROM users WHERE USERNAME = p_sender_user_name;
+
+    -- Get Recipient User ID
+    SELECT userId INTO v_userRecipentId FROM users WHERE USERNAME = p_recipient_user_name;
+
+    -- Insert the transaction
+    INSERT INTO CAOHIEEU.transaction (
+        TRANSACTIONID, 
+        SENDERUSERID, 
+        RECIPIENTUSERID, 
+        TRANSACTIONTYPE, 
+        AMOUNT, 
+        TRANSACTIONDATE,
+        VOICE
+    ) VALUES (
+        TRANSACTION_SEQ.NEXTVAL, -- Assumed that sequence is correctly created and named
+        v_userSenderId, 
+        v_userRecipentId, 
+        p_transaction_type, 
+        p_amount, 
+        CURRENT_TIMESTAMP,
+        p_voice
+    );
+    -- COMMIT should be removed or handled externally
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Handle user not found situation
+        -- You can log the error or raise a custom exception
+        RAISE_APPLICATION_ERROR(-20001, 'User not found.');
+    WHEN OTHERS THEN
+        -- Handle other errors
+        RAISE_APPLICATION_ERROR(-20002, SQLERRM);
+END;
+
 

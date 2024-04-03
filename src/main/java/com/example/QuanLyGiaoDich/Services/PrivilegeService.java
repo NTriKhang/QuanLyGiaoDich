@@ -29,17 +29,18 @@ public class PrivilegeService {
 	public PrivilegeService(DataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
-	public List<RoleDto> getAllRole() {
+	public List<RoleDto> getAllRole(String userName) {
 		return jdbcTemplate.execute(conn -> {
-			CallableStatement stmt = conn.prepareCall("{ ? = call get_all_roles() }");
+			CallableStatement stmt = conn.prepareCall("{ ? = call user_role_with_grant(?) }");
 			stmt.registerOutParameter(1, OracleTypes.CURSOR);
+			stmt.setString(2, userName);
 			return stmt;
 		}, (CallableStatementCallback<List<RoleDto>>) stmt -> {
 			stmt.execute();
 			ResultSet rs = (ResultSet) stmt.getObject(1);
 			List<RoleDto> listResult = new ArrayList<>();
 			while (rs.next()) {
-				listResult.add(new RoleDto(rs.getString("ROLE"), rs.getString("ORACLE_MAINTAINED")));
+				listResult.add(new RoleDto(rs.getString("GRANTED_ROLE"), rs.getString("ADMIN_OPTION")));
 			}
 			return listResult;
 		});
@@ -154,6 +155,28 @@ public class PrivilegeService {
 			return "completed";
 		});
 	}
+	public String revoke_crud_role(String statement, String tableName, String roleName) {
+		return jdbcTemplate.execute(conn -> {
+
+			String query = "REVOKE " + statement + " ON " + userSystemName + "." + tableName + " FROM " + roleName;
+			CallableStatement stmt = conn.prepareCall(query);
+			return stmt;
+		}, (CallableStatementCallback<String>) stmt -> {
+			stmt.execute();
+			return "completed";
+		});
+	}
+	public String grant_crud_role(String statement, String tableName, String roleName) {
+		return jdbcTemplate.execute(conn -> {
+
+			String query = "GRANT " + statement + " ON " + userSystemName + "." + tableName + " TO  " + roleName;
+			CallableStatement stmt = conn.prepareCall(query);
+			return stmt;
+		}, (CallableStatementCallback<String>) stmt -> {
+			stmt.execute();
+			return "completed";
+		});
+	}
 	public String revoke_role_from_user(String p_role_name, String p_username) {
 		return jdbcTemplate.execute(conn -> {
 			CallableStatement stmt = conn.prepareCall("{ call revoke_role_from_user(?,?) }");
@@ -176,9 +199,15 @@ public class PrivilegeService {
 			return stmt.getInt(1);
 		});
 	}
-	public Integer assignRoleToUser(String p_role_name, String p_user_name) {
+	public Integer assignRoleToUser(String p_role_name, String p_user_name, Boolean p_withOption) {
+		System.out.println(p_withOption);
 		return jdbcTemplate.execute(conn -> {
-			CallableStatement stmt = conn.prepareCall("{ call assign_role_to_user(?, ?) }");
+			CallableStatement stmt;
+			if(p_withOption == false)
+				stmt = conn.prepareCall("{ call assign_role_to_user(?, ?) }");
+			else
+				stmt = conn.prepareCall("{ call assign_role_to_user_option(?, ?) }");
+			
 			stmt.setString(1, p_role_name);
 			stmt.setString(2, p_user_name);
 			return stmt;

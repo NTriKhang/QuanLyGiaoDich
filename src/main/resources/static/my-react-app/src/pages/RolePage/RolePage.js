@@ -4,6 +4,7 @@ import Navbar from "../../components/navbar/Navbar";
 import { Modal, Table } from "antd";
 import ListUserModal from "./ListUser";
 import ListProcedureModal from "./ListProcedureModal";
+import AddCrudPage from "./AddCrudPage";
 
 const RolePage = (props) => {
     const navigate = useNavigate();
@@ -11,13 +12,17 @@ const RolePage = (props) => {
     const [listInfo, setListInfo] = useState([]);
 
     const [selectedRole, setSelectedRole] = useState(null);
+    const [selectedOption, setSelectedOption] = useState(null);
 
     const showListRole = () => {
-        fetch('http://localhost:8080/api/v1/privilege', {
+        let userName = localStorage.getItem("userNameKey").split(" ")[0];
+        console.log(userName)
+        fetch('http://localhost:8080/api/v1/privilege/getRole/' + userName, {
             method: 'GET'
         })
         .then(response => response.json())
         .then(data => {
+            console.log(data)
             setListInfo(data);
         });
     }
@@ -44,13 +49,14 @@ const RolePage = (props) => {
 
         showListRole();
     }, []);
-    const handleDetailClick = (roleName) => {
+    const handleDetailClick = (roleName, option) => {
         setSelectedRole(roleName);
+        setSelectedOption(option)
     };
 
     const closeModal = () => {
         setSelectedRole(null);
-
+        setSelectedOption(null)
     };
     return (
         <div>
@@ -65,7 +71,7 @@ const RolePage = (props) => {
                   <thead>
                       <tr>
                           <th>ROLE</th>
-                          <th>ORACLE MAINTAINED</th>
+                          <th>With option</th>
                           <th></th>
                           <th></th>
                       </tr>
@@ -74,21 +80,22 @@ const RolePage = (props) => {
                       {listInfo.map((role, index) => (
                           <tr key={index}>
                               <td className="text-center">{role.role}</td>
-                              <td className="text-center">{role.oracle_maintained}</td>
-                              <td style={{ display: role.oracle_maintained === 'N' ? 'inline-block' : 'none' }}><button onClick={() => onDelete(role.role, index)} className="btn btn-danger">Delete</button></td>
-                              <td style={{ display: 'inline-block' }}><button onClick={() => handleDetailClick(role.role)} className="btn btn-success">Detail</button></td>
+                              <td className="text-center">{role.with_option}</td>
+                              <td style={{ display: role.with_option === 'YES' ? 'inline-block' : 'none' }}><button onClick={() => onDelete(role.role, index)} className="btn btn-danger">Delete</button></td>
+                              <td style={{ display: 'inline-block' }}><button onClick={() => handleDetailClick(role.role, role.with_option)} className="btn btn-success">Detail</button></td>
                           </tr>
                       ))}
                   </tbody>
               </table>
           </div>
-          {selectedRole && <RoleDetail roleName={selectedRole} onClose={closeModal} isModalOpen={true}/>}
+          {selectedRole && <RoleDetail roleWithOption={selectedOption} roleName={selectedRole} onClose={closeModal} isModalOpen={true}/>}
         </div>  
       );
 }
-const RoleDetail = ({ roleName, onClose, isModalOpen}) => {
+const RoleDetail = ({ roleName, onClose, isModalOpen, roleWithOption}) => {
     const [addUser, setAddUser] = useState(null)
     const [addProc, setAddProc] = useState(null)
+    const [addCrud, setAddCrud] = useState(null)
     const [roleDetail, setRoleDetail] = useState(null)
     const [listUser, setListUser] = useState(null)
     const dataFetchedRef = React.useRef(false);
@@ -132,6 +139,8 @@ const RoleDetail = ({ roleName, onClose, isModalOpen}) => {
         .then(response => response.json())
         .then(data => {
             console.log(data)
+            let excludedUser = "KHANG3"; // Replace "username_to_exclude" with the username you want to exclude
+            let filteredData = data.filter(element => element.Grantee !== excludedUser);
             const modifiedData = data.map((element, index) => {
                 // Add a key field to each element with the index value
                 return { ...element, key: index };
@@ -153,6 +162,9 @@ const RoleDetail = ({ roleName, onClose, isModalOpen}) => {
     const handleDetailClick_proc = () => {
         setAddProc(true);
     };
+    const handleDetailClick_crud = () => {
+        setAddCrud(true);
+    };
     const closeModal = () => {
         setAddUser(null);
         showUsers()
@@ -160,6 +172,11 @@ const RoleDetail = ({ roleName, onClose, isModalOpen}) => {
     };
     const closeModal_proc = () => {
         setAddProc(null);
+        showRoleDetail();
+
+    };
+    const closeModal_crud = () => {
+        setAddCrud(null);
         showRoleDetail();
 
     };
@@ -175,6 +192,31 @@ const RoleDetail = ({ roleName, onClose, isModalOpen}) => {
                     RoleName: roleName
                     }
                     fetch('http://localhost:8080/api/v1/privilege/revoke_execute_proc', {
+                    method: 'POST',
+                    body: JSON.stringify(assignRole)
+                    }).then(res => {
+                    console.log(res)
+                    if(res.ok){
+            
+                        alert("revoke successfully")
+                        onClose()
+                    }
+                    });
+                } catch {
+                    console.log("err")
+                }
+            }
+        }
+        else{
+            let isconfirm = window.confirm(`Are you sure you want to remove ${record.Privilege} on ${record.TableName}?`);
+            if(isconfirm){
+                try {
+                    const assignRole = {
+                    stateMent: record.Privilege,
+                    tableName: record.TableName,
+                    roleName: roleName
+                    }
+                    fetch('http://localhost:8080/api/v1/privilege/revoke_crud_role', {
                     method: 'POST',
                     body: JSON.stringify(assignRole)
                     }).then(res => {
@@ -232,19 +274,22 @@ const RoleDetail = ({ roleName, onClose, isModalOpen}) => {
         <Modal title="Privilege Modal" open={isModalOpen} onOk={onClose} onCancel={onClose}>
             <div className="mb-3">
                 <h5 >OBJECT priv</h5>
-                <button className="btn btn-primary" onClick={handleDetailClick_proc}>add proc</button>
+                {roleWithOption === 'YES' && <button className="btn btn-primary me-3" onClick={handleDetailClick_crud}>add crud</button>}
+                {roleWithOption === 'YES' && <button className="btn btn-primary me-3" onClick={handleDetailClick_proc}>add proc</button>}
                 {roleDetail && <Table columns={columns} dataSource={roleDetail} onRow={(record, index) => ({
                     onClick: () => handleRowClick_proc(record, index),
                 })} />}
                 {addProc && <ListProcedureModal onClose={closeModal_proc} isModalOpen={true} roleName={roleName}/>}
+                {addCrud && <AddCrudPage onClose={closeModal_crud} isModalOpen={true} roleName={roleName}/>}
             </div>
             <div className="mb-3">
                 <h5 className="mb-3">Assigned user</h5>
-                <button className="btn btn-primary" onClick={handleDetailClick}>Add</button>
+                {roleWithOption === 'YES' && <button className="btn btn-primary" onClick={handleDetailClick}>Add</button>
+                }
                 {roleDetail && <Table columns={columns_user} dataSource={listUser} onRow={(record, index) => ({
                     onClick: () => handleRowClick_user(record, index),
                 })}/>}
-                {addUser && <ListUserModal onClose={closeModal} isModalOpen={true} roleName={roleName}/>}
+                {addUser && <ListUserModal onClose={closeModal} isModalOpen={true} roleName={roleName} roleWithOption={roleWithOption}/>}
             </div>
         </Modal>
       </>

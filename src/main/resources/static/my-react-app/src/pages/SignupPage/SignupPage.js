@@ -50,7 +50,6 @@ export default function Signup () {
     }
     const onSubmit = async (event) => {
         event.preventDefault();
-        const formData = new FormData();
         var userData = {
             firstName: firstname,
             lastName: lastname,
@@ -60,16 +59,13 @@ export default function Signup () {
             userName: username,
             password: password
         }
+        const formData = new FormData();
         formData.append('file', selectedFile);
         formData.append('user', JSON.stringify(userData));
         console.log(userData)
         try{
             fetch('http://localhost:8080/api/v1/users',{
                 method: 'POST',
-                // mode: 'no-cors',
-                // headers:{
-                //     "Content-type": "multipart/form-data",
-                // },
                 body: formData
             }).then(res => {
                 console.log('submit successfully', res)

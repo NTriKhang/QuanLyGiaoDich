@@ -6,10 +6,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.QuanLyGiaoDich.Services.AlertService;
 import com.example.QuanLyGiaoDich.Services.TablespaceService;
 import com.example.QuanLyGiaoDich.Services.TransactionService;
+import com.example.QuanLyGiaoDich.dto.AddTransactionDto;
 import com.example.QuanLyGiaoDich.dto.InfoTransaction;
 import com.example.QuanLyGiaoDich.dto.TransactionDto;
 import com.example.QuanLyGiaoDich.dto.TransactionResponseDto;
@@ -22,6 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.io.Console;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -73,15 +77,19 @@ public class TransactionController {
 	}
 
 	@PostMapping
-	public ResponseEntity<?> createTransaction(@RequestBody TransactionDto transactionDto)
-			throws ClassNotFoundException, SQLException {
-		boolean transactionResult = transactionService.add_transaction(transactionDto);
+	public ResponseEntity<?> createTransaction(
+			@RequestPart String transactionDto,
+			@RequestParam MultipartFile file
+		) throws ClassNotFoundException, SQLException, IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		TransactionDto trans = mapper.readValue(transactionDto, TransactionDto.class);
+		boolean transactionResult = transactionService.add_transaction(trans, file.getBytes());
 		
 		String alertMessage = null;
 		if (transactionResult) {
 			Alert latestUnprocessedAlert = alertService.getLatestUnprocessedAlert();
 			alertMessage = latestUnprocessedAlert != null ? latestUnprocessedAlert.getMessage() : null;
-			TransactionResponseDto response = new TransactionResponseDto(transactionDto, alertMessage);
+			TransactionResponseDto response = new TransactionResponseDto(trans, alertMessage);
 			return ResponseEntity.ok(response);
 		}
 		return new ResponseEntity<>(transactionResult, HttpStatus.BAD_REQUEST);
@@ -145,4 +153,32 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting transaction.");
         }
     }
+	
+	@PostMapping("/insert_transaction")
+	public ResponseEntity<Boolean> insertTransaction(
+				@RequestPart String transaction,
+				@RequestParam MultipartFile file
+			) throws ClassNotFoundException, SQLException {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			AddTransactionDto trans = mapper.readValue(transaction, AddTransactionDto.class);
+			
+			Boolean status = transactionService.insert_transaction(
+					trans.userID,
+					trans.senderUserID,
+					trans.recipientUserID,
+					trans.transactionType,
+					trans.amount,
+					file.getBytes()
+			);
+			if(status) {
+				return ResponseEntity.ok(status);
+			}
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+		}
+		catch (Exception e) {
+			System.out.println(e);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(false);
+		}
+	}
 }
