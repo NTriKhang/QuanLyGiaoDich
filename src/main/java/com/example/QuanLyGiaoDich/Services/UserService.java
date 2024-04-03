@@ -214,4 +214,19 @@ public class UserService {
 	    BigDecimal size = (BigDecimal) out.get("p_tablespace_size");
 	    return size != null ? size.intValue() : -1;
 	}
+	public int deleteApplicationUser(String userName) {
+		try {
+            return jdbcTemplate.execute((Connection connection) -> {
+                CallableStatement cs = connection.prepareCall("{ call user_management_pkg.delete_application_user(?, ?) }");
+                cs.setString(1, userName);
+                cs.registerOutParameter(2, java.sql.Types.INTEGER);
+                cs.execute();
+                return cs.getInt(2);
+            });
+        } catch (DataAccessException e) {
+			e.printStackTrace();
+			System.err.println("Lỗi xảy ra: " + e.getMessage());
+			return -1;
+		}	
+	}
 }

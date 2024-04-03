@@ -148,12 +148,16 @@ public class TransactionService {
 			System.out.println("Connection is null!");
 			return false;
 		}
+		System.out.println("Transaction ID: " + transactionId);
+	    System.out.println("New Amount: " + newAmount);
+	    System.out.println("New Transaction Type: " + newTransactionType);
 		String sqlQuery = "UPDATE "+ userSystemName.toUpperCase() +".Transaction " +
 			               "SET " +
 			               "Amount = ?, " +
 			               "TransactionType = ? " +
 			               "WHERE " +
 			               "TransactionID = ?";
+
 		try (PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)){
 			if (newAmount != null) {
 	            preparedStatement.setDouble(1, newAmount);
@@ -162,8 +166,11 @@ public class TransactionService {
 	        }
 	        preparedStatement.setString(2, newTransactionType);
 	        preparedStatement.setLong(3, transactionId);
+			System.out.println(sqlQuery);
+			connection.setAutoCommit(false);
 	        int rowsAffected = preparedStatement.executeUpdate();
 	        if (rowsAffected > 0) {
+	        	connection.commit();
 	            System.out.println("Transaction updated successfully.");
 	            return true;
 	        } else {

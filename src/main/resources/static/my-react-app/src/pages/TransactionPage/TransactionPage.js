@@ -153,8 +153,16 @@ const TransactionPage = () => {
 	};
 	const handleEditTransaction = async (transactionId) => {
 		try {
-			const newAmount = parseFloat(window.prompt("Enter new amount:"));
-			const newTransactionType = window.prompt("Enter new transaction type:");
+			let newAmountInput = window.prompt("Enter new amount:");
+			let newAmount = parseFloat(newAmountInput);
+			if (isNaN(newAmount)) {
+				throw new Error('Invalid new amount');
+			}
+
+			let newTransactionType = window.prompt("Enter new transaction type:");
+			if (!newTransactionType) {
+				throw new Error('Invalid new transaction type');
+			}
 			const response = await fetch(`http://localhost:8080/api/v1/transactions/${transactionId}`, {
 				method: 'PUT',
 				headers: {
@@ -162,18 +170,15 @@ const TransactionPage = () => {
 					'UserName': userName
 				},
 				body: JSON.stringify({
-					newAmount: newAmount,
-					newTransactionType: newTransactionType
+					Amount: newAmount,
+					TransactionType: newTransactionType
 				})
 			});
 			if (response.ok) {
+				const updatedTransaction = await response.json();
 				const updatedTransactions = transactions.map(transaction => {
 					if (transaction.transactionID === transactionId) {
-						return {
-							...transaction,
-							amount: newAmount,
-							transactionType: newTransactionType
-						};
+						return updatedTransaction;
 					}
 					return transaction;
 				});
@@ -186,6 +191,7 @@ const TransactionPage = () => {
 			console.error('Error updating transaction:', error);
 		}
 	};
+
 
 	return (
 		<div>
