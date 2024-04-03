@@ -861,8 +861,51 @@ BEGIN
 
     RETURN 'Policy deleted successfully';
 END DELETE_FGA_POLICY;
+----------------------v6
+----------Khang
+CREATE OR REPLACE PROCEDURE assign_role_to_user_option(
+    p_role_name IN VARCHAR2,
+    p_username  IN VARCHAR2
+)
+IS
+BEGIN
+    EXECUTE IMMEDIATE 'GRANT ' || UPPER(p_role_name) || ' TO ' || UPPER(p_username) || ' WITH ADMIN OPTION';
+END assign_role_to_user_option;
 
----v6----
+SELECT *
+FROM DBA_ROLE_PRIVS
+WHERE GRANTEE = 'VAN11';
+
+desc DBA_ROLE_PRIVS
+
+CREATE OR REPLACE FUNCTION user_role_with_grant(p_username IN VARCHAR2)
+RETURN SYS_REFCURSOR
+IS
+    c_result SYS_REFCURSOR;
+BEGIN
+    OPEN c_result FOR
+        SELECT GRANTED_ROLE, ADMIN_OPTION
+        FROM DBA_ROLE_PRIVS
+        WHERE GRANTEE = UPPER('Khang3');
+    RETURN c_result;
+END user_role_with_grant;
+/
+DECLARE
+    v_cursor SYS_REFCURSOR;
+    v_role_name VARCHAR2(100);
+    v_admin_option VARCHAR2(3);
+BEGIN
+    v_cursor := user_role_with_grant('KHANG3');
+    LOOP
+        FETCH v_cursor INTO v_role_name, v_admin_option;
+        EXIT WHEN v_cursor%NOTFOUND;
+        DBMS_OUTPUT.PUT_LINE('Role: ' || v_role_name || ', With Grant Option: ' || v_admin_option);
+    END LOOP;
+    CLOSE v_cursor;
+END;
+/
+set serveroutput on;
+
 ---Hieu-------
 alter table transaction add (VOICE BLOB);
 
@@ -939,3 +982,4 @@ EXCEPTION
         -- Handle other errors
         RAISE_APPLICATION_ERROR(-20002, SQLERRM);
 END;
+

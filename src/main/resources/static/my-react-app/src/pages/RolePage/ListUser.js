@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Modal, Table } from 'antd';
-const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
+const ListUserModal = ({ onClose, isModalOpen, roleName, roleWithOption }) => {
 
   const dataFetchedRef = React.useRef(false);
   const [listUser, setListUser] = useState(null)
+  const [withOption, setWithOption] = useState(null)
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedRowData, setSelectedRowData] = useState(null);
 
@@ -40,8 +41,10 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
       try {
         const assignRole = {
           UserName: username,
-          RoleName: roleName
+          RoleName: roleName,
+          WithOption: withOption
         }
+        console.log(assignRole)
         fetch('http://localhost:8080/api/v1/privilege/assignRoleToUser', {
           method: 'POST',
           body: JSON.stringify(assignRole)
@@ -73,15 +76,28 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
     return selectedRowKeys.includes(index) ? 'selected-row' : '';
   };
   React.useEffect(() => {
+
+
     if (dataFetchedRef.current) return;
     dataFetchedRef.current = true;
 
     showRoleDetail();
-
+    if(roleWithOption === 'YES'){
+      let isconfirm = window.confirm(`grant with option ?`);
+      if(isconfirm){
+        setWithOption(true)
+      }
+      else{
+        setWithOption(false)
+      }
+    }
+    else{
+      setWithOption(false)
+    }
   }, []);
   return (
     <>
-      <Modal title="Basic Modal" open={isModalOpen} onOk={handleOk} onCancel={onClose}>
+      {withOption !== null && <Modal title="Basic Modal" open={isModalOpen} onOk={handleOk} onCancel={onClose}>
         {listUser && <Table
           rowSelection={{
             selectedRowKeys,
@@ -98,7 +114,7 @@ const ListUserModal = ({ onClose, isModalOpen, roleName }) => {
           }}
         />
         }
-      </Modal>
+      </Modal>}
     </>
   );
 };
