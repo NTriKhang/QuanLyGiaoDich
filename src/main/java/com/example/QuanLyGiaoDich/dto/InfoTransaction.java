@@ -9,6 +9,7 @@ public class InfoTransaction {
 	public String transactionType;
 	public double amount;
 	public Date transactionDate;
+	public byte[] voice;
     
 	public String getTransactionID() {
 		return transactionID;

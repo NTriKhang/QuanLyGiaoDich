@@ -1,6 +1,8 @@
 package com.example.QuanLyGiaoDich.models;
 
 import jakarta.persistence.*;
+
+import java.sql.Blob;
 import java.sql.Timestamp;
 
 @Entity
@@ -34,6 +36,9 @@ public class Transaction {
     @ManyToOne
     @JoinColumn(name = "RECIPIENTUSERID", referencedColumnName = "USERID", insertable = false, updatable = false)
     private Users recipientUser;
+    
+    @Column(name = "VOICE")
+    private byte[] voice;
 
     // Constructors, getters, and setters...
 
@@ -43,16 +48,25 @@ public class Transaction {
 
     // Parameterized constructor
     public Transaction(String senderUserID, String recipientUserID, String transactionType, Double amount,
-                       Timestamp transactionDate) {
+                       Timestamp transactionDate, byte[] voice) {
         this.senderUserID = senderUserID;
         this.recipientUserID = recipientUserID;
         this.transactionType = transactionType;
         this.amount = amount;
         this.transactionDate = transactionDate;
+        this.voice = voice;
     }
 
 	public Long getTransactionID() {
 		return transactionID;
+	}
+
+	public byte[] getVoice() {
+		return voice;
+	}
+
+	public void setVoice(byte[] voice) {
+		this.voice = voice;
 	}
 
 	public void setTransactionID(Long transactionID) {

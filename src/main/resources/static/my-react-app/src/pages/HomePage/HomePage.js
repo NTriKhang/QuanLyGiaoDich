@@ -9,6 +9,15 @@ const Home = (props) => {
 	const [alertMessage, setAlertMessage] = useState('');
 	const navigate = useNavigate();
 	const [shouldFetchAlert, setShouldFetchAlert] = useState(false);
+	const [selectedFile, setSelectedFile] = useState();
+
+	const onAudioChange = () => {
+        var file = document.getElementById('audio').files[0]
+        setSelectedFile(file);
+		console.log(file);
+        var reader = new FileReader();
+        reader.readAsDataURL(file)
+    }
 
 	useEffect(() => {
 		if (!localStorage.getItem('userNameKey')) {
@@ -54,19 +63,25 @@ const Home = (props) => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		const transaction = {
-			userName: localStorage.getItem('userNameKey'),
-			recipientUserName: userRecipientName,
-			amount: parseFloat(money),
-		};
+		// const transaction = {
+		// 	userName: localStorage.getItem('userNameKey'),
+		// 	recipientUserName: userRecipientName,
+		// 	amount: parseFloat(money),
+		// };
 		
 		try {
+			const formData = new FormData();
+			var transactionDto = {
+				userName: localStorage.getItem('userNameKey'),
+				recipientUserName: userRecipientName,
+				amount: parseFloat(money)
+			}
+			formData.append('file', selectedFile);
+			formData.append('transactionDto', JSON.stringify(transactionDto));
+			console.log(transactionDto)
 			const response = await fetch('http://localhost:8080/api/v1/transactions', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(transaction), 
+				body: formData, 
 			});
 		
 			if (!response.ok) {
@@ -108,7 +123,12 @@ const Home = (props) => {
 						required
 					/>
 				</div>
-				<button type="submit">Submit</button>
+				<div>
+					<input type="file" id="audio" onChange={(e) => onAudioChange()}></input>
+				</div>
+				<button 
+					className='my-4' 
+					type="submit" >Submit</button>
 			</form>
 		</div>
 	);
