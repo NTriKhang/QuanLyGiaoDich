@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-
 import com.example.QuanLyGiaoDich.Services.PolicyService;
 import com.example.QuanLyGiaoDich.Services.PrivilegeService;
 import com.example.QuanLyGiaoDich.Services.PrivilegeServices;
@@ -23,6 +22,7 @@ import com.example.QuanLyGiaoDich.dto.AddAuditDto;
 import com.example.QuanLyGiaoDich.dto.AddRoleDto;
 import com.example.QuanLyGiaoDich.dto.AssignRoleDto;
 import com.example.QuanLyGiaoDich.dto.AuditPolicyDto;
+import com.example.QuanLyGiaoDich.dto.RevokeRoleCrudDto;
 import com.example.QuanLyGiaoDich.dto.RoleDetailObjectDto;
 import com.example.QuanLyGiaoDich.dto.RoleDto;
 import com.example.QuanLyGiaoDich.dto.UserAssignedRoleDto;
@@ -45,51 +45,77 @@ public class PrivilegeController {
 	private PolicyService policyService;
 	@Autowired
 	private PrivilegeService privilegeService;
-	@GetMapping
-	public ResponseEntity<List<RoleDto>> getAllRole(){
-		List<RoleDto> roleDtos = privilegeService.getAllRole();
+
+	@GetMapping("/getRole/{userName}")
+	public ResponseEntity<List<RoleDto>> getAllRole(@PathVariable String userName) {
+		System.out.println("get role");
+		List<RoleDto> roleDtos = privilegeService.getAllRole(userName);
 		return ResponseEntity.ok(roleDtos);
 	}
+
 	@GetMapping("/getCol/{table_name}")
 	public ResponseEntity<List<String>> getAllTable(@PathVariable String table_name) {
 		System.out.println(table_name);
 		List<String> tableCol = privilegeService.getAllTableAttribute(table_name);
 		return ResponseEntity.ok(tableCol);
 	}
+
 	@GetMapping("/getProc")
 	public ResponseEntity<List<String>> getAllTable() {
 		List<String> tableCol = privilegeService.getAllProcedure();
 		return ResponseEntity.ok(tableCol);
 	}
+
 	@GetMapping("/getAllTable")
 	public ResponseEntity<List<String>> getAllTableName() {
 		List<String> listTableName = policyService.getAllTable(userSystemName);
 		return ResponseEntity.ok(listTableName);
 	}
+
 	@DeleteMapping("/{roleName}")
 	public ResponseEntity<String> deleteRole(@PathVariable String roleName) {
 		String res = privilegeService.deleteRole(roleName);
 		return ResponseEntity.ok(res);
 	}
+
 	@GetMapping("/roleDetail/{roleName}")
 	public ResponseEntity<List<RoleDetailObjectDto>> roleDetail(@PathVariable String roleName) {
 		List<RoleDetailObjectDto> res = privilegeService.getRoleDetailObject(roleName);
 		return ResponseEntity.ok(res);
 	}
+
 	@GetMapping("/roleDetail_user/{roleName}")
 	public ResponseEntity<List<UserAssignedRoleDto>> roleDetail_user(@PathVariable String roleName) {
 		List<UserAssignedRoleDto> res = privilegeService.getUserAssignedRole(roleName);
+
+		/*
+		 * int index =0, removeIndex = -1 ; for(UserAssignedRoleDto userAssignedRoleDto
+		 * : res) { System.out.println(userAssignedRoleDto.Grantee);
+		 * System.out.println(userSystemName.toUpperCase());
+		 * if(userAssignedRoleDto.Grantee.equals(userSystemName.toUpperCase())) {
+		 * removeIndex = index; break; } index++; } System.out.println(removeIndex);
+		 * if(removeIndex != -1) res.remove(removeIndex);
+		 */
+
+		boolean b = res.removeIf(s -> s.Grantee.equals(userSystemName.toUpperCase()));
+		System.out.println(b);
+		;
+
 		return ResponseEntity.ok(res);
 	}
+
 	@PostMapping
-	public ResponseEntity<String> addRole(@RequestBody String roleList) throws JsonMappingException, JsonProcessingException{
-		//String res = privilegeService.addRolePrivilege(userSystemName, userSystemName, userSystemName);
+	public ResponseEntity<String> addRole(@RequestBody String roleList)
+			throws JsonMappingException, JsonProcessingException {
+		// String res = privilegeService.addRolePrivilege(userSystemName,
+		// userSystemName, userSystemName);
 		ObjectMapper mapper = new ObjectMapper();
-		List<AddRoleDto> roleListMapper = mapper.readValue(roleList, new TypeReference<List<AddRoleDto>>() {});
-		if(roleListMapper.size() > 0) {
+		List<AddRoleDto> roleListMapper = mapper.readValue(roleList, new TypeReference<List<AddRoleDto>>() {
+		});
+		if (roleListMapper.size() > 0) {
 			int res = privilegeService.isRoleExist(roleListMapper.get(0).roleName);
 			System.out.println(res);
-			if(res == 0) {
+			if (res == 0) {
 				for (AddRoleDto addRoleDto : roleListMapper) {
 					System.out.println(addRoleDto.roleName);
 					privilegeService.addRolePrivilege(addRoleDto.roleName, addRoleDto.executeCmd, addRoleDto.tableName);
@@ -100,63 +126,96 @@ public class PrivilegeController {
 		}
 		return new ResponseEntity("Invalid parameter", HttpStatus.BAD_REQUEST);
 	}
+
 	@PostMapping("/assignRoleToUser")
-	public ResponseEntity<Integer> assignRoleToUser(@RequestBody String assignRole) throws JsonMappingException, JsonProcessingException {
-	    ObjectMapper mapper = new ObjectMapper();
-	    AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
-	    Integer result = privilegeService.assignRoleToUser(assignRoleDto.RoleName, assignRoleDto.UserName);
-	    System.out.println(result);
-	    return new ResponseEntity<Integer>(result, HttpStatus.OK);
-  }
+	public ResponseEntity<Integer> assignRoleToUser(@RequestBody String assignRole)
+			throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
+		Integer result = privilegeService.assignRoleToUser(assignRoleDto.RoleName, assignRoleDto.UserName,
+				assignRoleDto.WithOption);
+		System.out.println(result);
+		return new ResponseEntity<Integer>(result, HttpStatus.OK);
+	}
+
 	@PostMapping("/grant_execute_to_role")
-	public ResponseEntity<String> grant_execute_to_role(@RequestBody String assignRole) throws JsonMappingException, JsonProcessingException {
-	    ObjectMapper mapper = new ObjectMapper();
-	    AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
-	    String result = privilegeService.grant_execute_to_role(assignRoleDto.RoleName, assignRoleDto.UserName);
-	    System.out.println(result);
-	    return new ResponseEntity<String>(result, HttpStatus.OK);
-  }
+	public ResponseEntity<String> grant_execute_to_role(@RequestBody String assignRole)
+			throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
+		String result = privilegeService.grant_execute_to_role(assignRoleDto.RoleName, assignRoleDto.UserName);
+		System.out.println(result);
+		return new ResponseEntity<String>(result, HttpStatus.OK);
+	}
+
 	@PostMapping("/revoke_execute_proc")
-	public ResponseEntity<String> revoke_execute_proc(@RequestBody String assignRole) throws JsonMappingException, JsonProcessingException {
-	    ObjectMapper mapper = new ObjectMapper();
-	    AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
-	    String result = privilegeService.revoke_execute_proc(assignRoleDto.RoleName, assignRoleDto.UserName);
-	    System.out.println(result);
-	    return new ResponseEntity<String>(result, HttpStatus.OK);
-  }
+	public ResponseEntity<String> revoke_execute_proc(@RequestBody String assignRole)
+			throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
+		String result = privilegeService.revoke_execute_proc(assignRoleDto.RoleName, assignRoleDto.UserName);
+		System.out.println(result);
+		return new ResponseEntity<String>(result, HttpStatus.OK);
+	}
+	@PostMapping("/revoke_crud_role")
+	public ResponseEntity<String> revoke_crud_role(@RequestBody String assignRole)
+			throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		RevokeRoleCrudDto assignRoleDto = mapper.readValue(assignRole, RevokeRoleCrudDto.class);
+		String result = privilegeService.revoke_crud_role(assignRoleDto.stateMent, assignRoleDto.tableName, assignRoleDto.roleName);
+		System.out.println(result);
+		return new ResponseEntity<String>(result, HttpStatus.OK);
+	}
+	@PostMapping("/grant_crud_role")
+	public ResponseEntity<String> grant_crud_role(@RequestBody String assignRole)
+			throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		RevokeRoleCrudDto assignRoleDto = mapper.readValue(assignRole, RevokeRoleCrudDto.class);
+		String result = privilegeService.grant_crud_role(assignRoleDto.stateMent, assignRoleDto.tableName, assignRoleDto.roleName);
+		System.out.println(result);
+		if(result == "completed")
+			return new ResponseEntity<String>(result, HttpStatus.OK);
+		return new ResponseEntity<String>("bad request", HttpStatus.BAD_REQUEST);
+	}
 	@PostMapping("/revoke_role_from_user")
-	public ResponseEntity<String> revoke_role_from_user(@RequestBody String assignRole) throws JsonMappingException, JsonProcessingException {
-	    ObjectMapper mapper = new ObjectMapper();
-	    AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
-	    String result = privilegeService.revoke_role_from_user(assignRoleDto.RoleName, assignRoleDto.UserName);
-	    System.out.println(result);
-	    return new ResponseEntity<String>(result, HttpStatus.OK);
-  }
+	public ResponseEntity<String> revoke_role_from_user(@RequestBody String assignRole)
+			throws JsonMappingException, JsonProcessingException {
+		ObjectMapper mapper = new ObjectMapper();
+		AssignRoleDto assignRoleDto = mapper.readValue(assignRole, AssignRoleDto.class);
+		String result = privilegeService.revoke_role_from_user(assignRoleDto.RoleName, assignRoleDto.UserName);
+		System.out.println(result);
+		return new ResponseEntity<String>(result, HttpStatus.OK);
+	}
+
 	@Autowired
 	private PrivilegeServices privilegeServices;
-	
+
 	@PostMapping("/grantTable")
-	public ResponseEntity<UserPrivilegeDto> grantPrivilegeToTable(@RequestBody String infoPrivilege) throws JsonMappingException, JsonProcessingException {
+	public ResponseEntity<UserPrivilegeDto> grantPrivilegeToTable(@RequestBody String infoPrivilege)
+			throws JsonMappingException, JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		UserPrivilegeDto privilege = mapper.readValue(infoPrivilege, UserPrivilegeDto.class);
-		int status = privilegeServices.grantPrivilegeToTable(privilege.p_username, privilege.p_table, privilege.p_privilege);
-		if(status == 1) {
+		int status = privilegeServices.grantPrivilegeToTable(privilege.p_username, privilege.p_table,
+				privilege.p_privilege);
+		if (status == 1) {
 			return ResponseEntity.ok(privilege);
 		}
 		return ResponseEntity.badRequest().build();
 	}
-	
+
 	@PostMapping("/revokeTable")
-	public ResponseEntity<UserPrivilegeDto> revokePrivilegeToTable(@RequestBody String infoPrivilege) throws JsonMappingException, JsonProcessingException {
+	public ResponseEntity<UserPrivilegeDto> revokePrivilegeToTable(@RequestBody String infoPrivilege)
+			throws JsonMappingException, JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		UserPrivilegeDto privilege = mapper.readValue(infoPrivilege, UserPrivilegeDto.class);
-		int status = privilegeServices.revokePrivilegeToTable(privilege.p_username, privilege.p_table, privilege.p_privilege);
-		if(status == 1) {
+		int status = privilegeServices.revokePrivilegeToTable(privilege.p_username, privilege.p_table,
+				privilege.p_privilege);
+		if (status == 1) {
 			return ResponseEntity.ok(privilege);
 		}
 		return ResponseEntity.badRequest().build();
 	}
-	
+
 	@GetMapping("/getUserPrivilege/{username}")
 	public ResponseEntity<List<TablePrivilegeDto>> getUserPrivilege(@PathVariable("username") String username) {
 		List<TablePrivilegeDto> listPrivilege = privilegeServices.getPrivilegeUser(username);

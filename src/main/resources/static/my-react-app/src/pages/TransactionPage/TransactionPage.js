@@ -30,6 +30,7 @@ const TransactionPage = () => {
 				},
 			});
 			if (!response.ok) {
+				window.alert("You don't have privilege.")
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			const data = await response.json();
@@ -79,6 +80,7 @@ const TransactionPage = () => {
 				setTransactions(updatedTransactions);
 				window.alert("Transaction deleted successfully.")
 			} else {
+				window.alert("You don't have privilege.")
 				console.error('Error deleting transaction:', response.statusText);
 			}
 		} catch (error) {
@@ -114,6 +116,7 @@ const TransactionPage = () => {
 				setTransactions(updatedTransactions);
 				window.alert("Transaction updated successfully.")
 			} else {
+				window.alert("You don't have privilege.")
 				console.error('Error updating transaction:', response.statusText);
 			}
 		} catch (error) {
